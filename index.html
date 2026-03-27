@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Global Pulse 24/7 | 실시간 뉴스 및 커뮤니티</title>
+    <title>Global Pulse 24/7 | 실시간 구글 뉴스 수집</title>
     <style>
         :root {
             --bg-black: #050505;
             --card-bg: #121212;
             --accent: #ff3e3e;
-            --nickname-color: #00d2ff; /* 닉네임 색상을 밝은 하늘색으로 설정 */
+            --nickname-color: #00d2ff;
             --text-gray: #b0b0b0;
             --glass: rgba(255, 255, 255, 0.05);
         }
@@ -60,46 +60,30 @@
             background: var(--card-bg); border-radius: 15px; overflow: hidden;
             border: 1px solid #222; transition: 0.3s; display: flex; flex-direction: column;
         }
-        .news-img { height: 180px; background-size: cover; background-position: center; }
+        .news-card:hover { border-color: var(--accent); transform: translateY(-5px); }
+        .news-img { height: 180px; background-size: cover; background-position: center; background-image: url('https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=400'); }
         .news-content { padding: 20px; flex-grow: 1; }
-        .news-title { font-size: 1.15rem; font-weight: bold; margin-bottom: 12px; line-height: 1.4; }
-        .news-desc { color: var(--text-gray); font-size: 0.9rem; line-height: 1.6; }
+        .news-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 12px; line-height: 1.4; color: #fff; text-decoration: none; display: block; }
+        .news-desc { color: var(--text-gray); font-size: 0.85rem; line-height: 1.6; }
 
-        /* 댓글 섹션 스타일 */
-        .comment-section {
-            background: #0a0a0a; border-top: 1px solid #222;
-            max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out;
-        }
-        .comment-section.active { max-height: 600px; overflow-y: auto; }
+        .analysis-loader { display: none; text-align: center; padding: 80px 20px; }
+        .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        .comment-header { padding: 15px 20px; font-size: 0.85rem; font-weight: bold; color: #888; border-bottom: 1px solid #1a1a1a; }
-        
-        .comment-list { padding: 10px 20px; }
-        .comment-item { margin-bottom: 15px; font-size: 0.85rem; border-bottom: 1px solid #1a1a1a; padding-bottom: 10px; }
-        .comment-user { color: var(--nickname-color); font-weight: bold; margin-right: 8px; }
-        .comment-text { color: #ddd; }
-
-        .comment-form { padding: 15px 20px; background: #111; }
-        .comment-input-row { display: flex; gap: 8px; flex-wrap: wrap; }
-        .comment-name { width: 70px; background: #1a1a1a; border: 1px solid #333; color: white; padding: 10px; border-radius: 8px; font-size: 0.8rem; }
-        .comment-msg { flex-grow: 1; min-width: 150px; background: #1a1a1a; border: 1px solid #333; color: white; padding: 10px; border-radius: 8px; font-size: 0.8rem; }
-        .comment-submit { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; font-weight: bold; transition: 0.2s; }
-        .comment-submit:hover { background: #ff5252; transform: scale(1.02); }
-
-        .news-footer {
-            border-top: 1px solid #222; padding: 15px 20px; font-size: 0.8rem;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .comment-toggle { cursor: pointer; color: #666; transition: 0.3s; font-weight: bold; }
-        .comment-toggle:hover { color: var(--accent); }
+        .news-footer { border-top: 1px solid #222; padding: 15px 20px; font-size: 0.75rem; color: #666; display: flex; justify-content: space-between; }
 
         footer { padding: 60px 5%; text-align: center; border-top: 1px solid #222; color: #444; }
 
-        @media (max-width: 480px) {
-            .comment-name { width: 100%; }
-            .comment-msg { width: 100%; }
-            .comment-submit { width: 100%; margin-top: 5px; }
-        }
+        /* 댓글 스타일 유지 */
+        .comment-section { background: #0a0a0a; border-top: 1px solid #222; max-height: 0; overflow: hidden; transition: 0.4s; }
+        .comment-section.active { max-height: 400px; overflow-y: auto; }
+        .comment-item { padding: 10px 20px; border-bottom: 1px solid #111; font-size: 0.8rem; }
+        .comment-user { color: var(--nickname-color); font-weight: bold; margin-right: 10px; }
+        .comment-form { padding: 15px 20px; display: flex; gap: 8px; }
+        .comment-input { background: #1a1a1a; border: 1px solid #333; color: white; padding: 8px; border-radius: 5px; flex-grow: 1; }
+        .comment-btn { background: var(--accent); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
+
+        @media (max-width: 768px) { header { flex-direction: column; } }
     </style>
 </head>
 <body>
@@ -107,113 +91,134 @@
 <header>
     <div class="logo">GLOBAL PULSE 24/7</div>
     <div class="search-container">
-        <input type="text" class="search-input" id="searchInput" placeholder="검색어를 입력하세요 (예: 일본관동 지진)">
-        <button class="search-btn" onclick="handleSearch()">뉴스 수집</button>
+        <input type="text" class="search-input" id="searchInput" placeholder="구글 뉴스 실시간 수집 (예: 일본 지진, 엔화 환율)">
+        <button class="search-btn" onclick="fetchGoogleNews()">뉴스 수집</button>
     </div>
 </header>
 
 <nav class="category-bar">
-    <button class="cat-btn active" onclick="changeCategory('urgent', this)">🚨 긴급</button>
-    <button class="cat-btn" onclick="changeCategory('war', this)">⚔️ 전쟁</button>
-    <button class="cat-btn" onclick="changeCategory('economy', this)">📈 경제</button>
-    <button class="cat-btn" onclick="changeCategory('climate', this)">🌡️ 기후</button>
+    <button class="cat-btn active" onclick="changeCategory('headlines', this)">🌐 주요 뉴스</button>
+    <button class="cat-btn" onclick="changeCategory('world', this)">🌍 세계</button>
+    <button class="cat-btn" onclick="changeCategory('business', this)">📈 경제</button>
+    <button class="cat-btn" onclick="changeCategory('technology', this)">💻 IT</button>
+    <button class="cat-btn" onclick="changeCategory('science', this)">🧪 과학</button>
 </nav>
 
 <main>
-    <h2 id="sectionTitle" style="margin-bottom: 25px;">🚨 최근 긴급 뉴스</h2>
-    <div class="news-grid" id="newsGrid"></div>
+    <div id="loader" class="analysis-loader">
+        <div class="spinner"></div>
+        <p id="loaderText">구글 뉴스 라이브 서버에서 데이터 수집 중...</p>
+    </div>
+
+    <div id="contentSection">
+        <h2 id="sectionTitle" style="margin-bottom: 25px;">🌐 실시간 주요 뉴스 (Live)</h2>
+        <div class="news-grid" id="newsGrid"></div>
+    </div>
 </main>
 
-<footer>&copy; 2026 Global Pulse AI News.</footer>
+<footer>&copy; 2026 Global Pulse 24/7 | Powered by Google News RSS</footer>
 
 <script>
-    const newsData = {
-        urgent: [{ id: 1, title: "일본 관동 지역 규모 6.8 지진 발생", desc: "도쿄 인근 해상에서 강한 지진이 발생하여 신칸센 운행이 일시 중단되었습니다.", tag: "지진/재난", time: "2분 전", img: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=400" }],
-        war: [{ id: 2, title: "중동 긴장 고조, 호르무즈 해협 봉쇄 위기", desc: "국제 유가가 배럴당 100달러를 향해 급등하고 있습니다.", tag: "전쟁/분쟁", time: "10분 전", img: "https://images.unsplash.com/photo-1526628953301-3e589a6a8b74?w=400" }],
-        economy: [{ id: 3, title: "비트코인, 사상 최고가 10만 달러 돌파", desc: "가상자산 시장이 유례없는 호황을 맞고 있습니다.", tag: "코인", time: "5분 전", img: "https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=400" }],
-        climate: [{ id: 4, title: "북극 기온 관측 사상 최고치 기록", desc: "예상보다 빠른 빙하 해빙 속도에 경고가 잇따르고 있습니다.", tag: "이상기후", time: "30분 전", img: "https://images.unsplash.com/photo-1516912481808-34061f8bc9a2?w=400" }]
-    };
+    // RSS to JSON 변환 서비스를 사용하여 구글 뉴스 가져오기
+    const PROXY_URL = "https://api.rss2json.com/v1/api.json?rss_url=";
+    
+    async function fetchGoogleNews(query = "") {
+        const grid = document.getElementById('newsGrid');
+        const loader = document.getElementById('loader');
+        const content = document.getElementById('contentSection');
+        const searchInput = document.getElementById('searchInput');
 
-    function changeCategory(cat, btn) {
-        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById('sectionTitle').innerText = btn.innerText + ' 뉴스';
-        renderNews(newsData[cat]);
+        // 검색어가 있으면 해당 검색어로, 없으면 현재 입력창 값으로
+        const searchTerm = query || searchInput.value.trim() || "주요 뉴스";
+        
+        content.style.display = 'none';
+        loader.style.display = 'block';
+
+        // 구글 뉴스 RSS URL 생성 (한글 뉴스 기준)
+        const googleNewsUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(searchTerm)}&hl=ko&gl=KR&ceid=KR:ko`;
+        
+        try {
+            const response = await fetch(PROXY_URL + encodeURIComponent(googleNewsUrl));
+            const data = await response.json();
+
+            if (data.status === 'ok') {
+                renderNews(data.items, searchTerm);
+            } else {
+                throw new Error("뉴스 수집 실패");
+            }
+        } catch (error) {
+            console.error(error);
+            alert("뉴스 수집 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+        } finally {
+            loader.style.display = 'none';
+            content.style.display = 'block';
+        }
     }
 
-    function renderNews(data) {
+    function renderNews(items, term) {
         const grid = document.getElementById('newsGrid');
+        const title = document.getElementById('sectionTitle');
         grid.innerHTML = '';
-        data.forEach(item => {
-            const comments = JSON.parse(localStorage.getItem(`comments_${item.id}`) || '[]');
+        title.innerText = `🔍 "${term}" 실시간 뉴스 (Google News)`;
+
+        items.forEach((item, index) => {
+            // 이미지 랜덤 배정 (구글 RSS는 이미지를 직접 주지 않는 경우가 많음)
+            const randomImg = `https://picsum.photos/seed/${index + Date.now()}/400/250`;
+            
             const card = document.createElement('div');
             card.className = 'news-card';
             card.innerHTML = `
-                <div class="news-img" style="background-image: url('${item.img}')"></div>
+                <div class="news-img" style="background-image: url('${randomImg}')"></div>
                 <div class="news-content">
-                    <div style="color: var(--accent); font-size: 0.7rem; font-weight: bold; margin-bottom: 5px;">${item.tag}</div>
-                    <div class="news-title">${item.title}</div>
-                    <div class="news-desc">${item.desc}</div>
+                    <div style="color: var(--accent); font-size: 0.7rem; font-weight: bold; margin-bottom: 5px;">LIVE / ${item.author || '언론사'}</div>
+                    <a href="${item.link}" target="_blank" class="news-title">${item.title}</a>
+                    <div class="news-desc">${item.description.replace(/<[^>]*>?/gm, '').substring(0, 100)}...</div>
                 </div>
                 <div class="news-footer">
-                    <span>${item.time}</span>
-                    <span class="comment-toggle" onclick="toggleComments(${item.id})">💬 댓글 ${comments.length}</span>
+                    <span>${new Date(item.pubDate).toLocaleString()}</span>
+                    <span style="cursor:pointer; color: var(--nickname-color);" onclick="toggleComments(${index})">💬 의견 쓰기</span>
                 </div>
-                <div class="comment-section" id="comments_${item.id}">
-                    <div class="comment-header">실시간 오피니언</div>
-                    <div class="comment-list" id="list_${item.id}">
-                        ${comments.map(c => `<div class="comment-item"><span class="comment-user">${c.user}</span><span class="comment-text">${c.text}</span></div>`).join('')}
-                    </div>
+                <div class="comment-section" id="comments_${index}">
                     <div class="comment-form">
-                        <div class="comment-input-row">
-                            <input type="text" class="comment-name" id="name_${item.id}" placeholder="닉네임">
-                            <input type="text" class="comment-msg" id="msg_${item.id}" placeholder="의견을 입력하세요...">
-                            <button class="comment-submit" onclick="addComment(${item.id})">등록</button>
-                        </div>
+                        <input type="text" class="comment-input" id="input_${index}" placeholder="의견을 입력하세요...">
+                        <button class="comment-btn" onclick="addComment(${index})">등록</button>
                     </div>
+                    <div id="list_${index}"></div>
                 </div>
             `;
             grid.appendChild(card);
         });
     }
 
-    function toggleComments(id) {
-        const section = document.getElementById(`comments_${id}`);
-        section.classList.toggle('active');
+    function toggleComments(idx) {
+        document.getElementById(`comments_${idx}`).classList.toggle('active');
     }
 
-    function addComment(id) {
-        const nameInput = document.getElementById(`name_${id}`);
-        const msgInput = document.getElementById(`msg_${id}`);
-        const user = nameInput.value.trim() || '익명';
-        const text = msgInput.value.trim();
+    function addComment(idx) {
+        const input = document.getElementById(`input_${idx}`);
+        const list = document.getElementById(`list_${idx}`);
+        if (!input.value.trim()) return;
 
-        if (!text) return alert("내용을 입력해주세요.");
-
-        const comments = JSON.parse(localStorage.getItem(`comments_${id}`) || '[]');
-        comments.push({ user, text });
-        localStorage.setItem(`comments_${id}`, JSON.stringify(comments));
-
-        nameInput.value = '';
-        msgInput.value = '';
-        
-        // 해당 카드만 새로고침하지 않고 전체 렌더링 유지하며 댓글창 활성화
-        const currentCat = document.querySelector('.cat-btn.active').innerText.includes('긴급') ? 'urgent' : 
-                          document.querySelector('.cat-btn.active').innerText.includes('전쟁') ? 'war' :
-                          document.querySelector('.cat-btn.active').innerText.includes('경제') ? 'economy' : 'climate';
-        renderNews(newsData[currentCat]);
-        document.getElementById(`comments_${id}`).classList.add('active');
+        const comment = document.createElement('div');
+        comment.className = 'comment-item';
+        comment.innerHTML = `<span class="comment-user">익명</span><span>${input.value}</span>`;
+        list.prepend(comment);
+        input.value = '';
     }
 
-    async function handleSearch() {
-        const query = document.getElementById('searchInput').value.trim();
-        if (!query) return;
-        document.getElementById('sectionTitle').innerText = `🔍 "${query}" 수집 결과`;
-        const searchResults = [{ id: Date.now(), title: `${query} 관련 긴급 분석 리포트`, desc: `실시간 트래픽 데이터 분석 결과, ${query}에 대한 전 세계적 관심도가 급증하고 있습니다.`, tag: "AI 수집", time: "방금 전", img: "https://images.unsplash.com/photo-1585829365294-118999551cd8?w=400" }];
-        renderNews(searchResults);
+    function changeCategory(cat, btn) {
+        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        fetchGoogleNews(btn.innerText);
     }
 
-    window.onload = () => renderNews(newsData.urgent);
+    // 엔터키 검색 지원
+    document.getElementById('searchInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') fetchGoogleNews();
+    });
+
+    // 초기 로드
+    window.onload = () => fetchGoogleNews("주요 뉴스");
 </script>
 
 </body>
