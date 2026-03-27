@@ -9,6 +9,7 @@
             --bg-black: #050505;
             --card-bg: #121212;
             --accent: #ff3e3e;
+            --nickname-color: #00d2ff; /* 닉네임 색상을 밝은 하늘색으로 설정 */
             --text-gray: #b0b0b0;
             --glass: rgba(255, 255, 255, 0.05);
         }
@@ -69,33 +70,35 @@
             background: #0a0a0a; border-top: 1px solid #222;
             max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out;
         }
-        .comment-section.active { max-height: 500px; overflow-y: auto; }
+        .comment-section.active { max-height: 600px; overflow-y: auto; }
 
         .comment-header { padding: 15px 20px; font-size: 0.85rem; font-weight: bold; color: #888; border-bottom: 1px solid #1a1a1a; }
         
         .comment-list { padding: 10px 20px; }
         .comment-item { margin-bottom: 15px; font-size: 0.85rem; border-bottom: 1px solid #1a1a1a; padding-bottom: 10px; }
-        .comment-user { color: var(--accent); font-weight: bold; margin-right: 8px; }
+        .comment-user { color: var(--nickname-color); font-weight: bold; margin-right: 8px; }
         .comment-text { color: #ddd; }
 
-        .comment-form { padding: 15px 20px; display: flex; flex-direction: column; gap: 10px; }
-        .comment-input-row { display: flex; gap: 10px; }
-        .comment-name { width: 80px; background: #1a1a1a; border: 1px solid #333; color: white; padding: 8px; border-radius: 5px; font-size: 0.8rem; }
-        .comment-msg { flex-grow: 1; background: #1a1a1a; border: 1px solid #333; color: white; padding: 8px; border-radius: 5px; font-size: 0.8rem; }
-        .comment-submit { background: #333; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; }
-        .comment-submit:hover { background: var(--accent); }
+        .comment-form { padding: 15px 20px; background: #111; }
+        .comment-input-row { display: flex; gap: 8px; flex-wrap: wrap; }
+        .comment-name { width: 70px; background: #1a1a1a; border: 1px solid #333; color: white; padding: 10px; border-radius: 8px; font-size: 0.8rem; }
+        .comment-msg { flex-grow: 1; min-width: 150px; background: #1a1a1a; border: 1px solid #333; color: white; padding: 10px; border-radius: 8px; font-size: 0.8rem; }
+        .comment-submit { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; font-weight: bold; transition: 0.2s; }
+        .comment-submit:hover { background: #ff5252; transform: scale(1.02); }
 
         .news-footer {
             border-top: 1px solid #222; padding: 15px 20px; font-size: 0.8rem;
             display: flex; justify-content: space-between; align-items: center;
         }
-        .comment-toggle { cursor: pointer; color: #666; transition: 0.3s; }
+        .comment-toggle { cursor: pointer; color: #666; transition: 0.3s; font-weight: bold; }
         .comment-toggle:hover { color: var(--accent); }
 
         footer { padding: 60px 5%; text-align: center; border-top: 1px solid #222; color: #444; }
 
-        @media (max-width: 768px) {
-            header { flex-direction: column; align-items: stretch; }
+        @media (max-width: 480px) {
+            .comment-name { width: 100%; }
+            .comment-msg { width: 100%; }
+            .comment-submit { width: 100%; margin-top: 5px; }
         }
     </style>
 </head>
@@ -134,6 +137,7 @@
     function changeCategory(cat, btn) {
         document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
+        document.getElementById('sectionTitle').innerText = btn.innerText + ' 뉴스';
         renderNews(newsData[cat]);
     }
 
@@ -192,8 +196,13 @@
 
         nameInput.value = '';
         msgInput.value = '';
-        renderNews(Object.values(newsData).flat().filter(n => n.id === id)); // 해당 카드만 리렌더링 (간략화)
-        document.getElementById(`comments_${id}`).classList.add('active'); // 열린 상태 유지
+        
+        // 해당 카드만 새로고침하지 않고 전체 렌더링 유지하며 댓글창 활성화
+        const currentCat = document.querySelector('.cat-btn.active').innerText.includes('긴급') ? 'urgent' : 
+                          document.querySelector('.cat-btn.active').innerText.includes('전쟁') ? 'war' :
+                          document.querySelector('.cat-btn.active').innerText.includes('경제') ? 'economy' : 'climate';
+        renderNews(newsData[currentCat]);
+        document.getElementById(`comments_${id}`).classList.add('active');
     }
 
     async function handleSearch() {
