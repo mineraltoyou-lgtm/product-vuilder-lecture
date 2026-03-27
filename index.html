@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Global Pulse 24/7 | 10대 뉴스 대시보드</title>
+    <title>Global Pulse 24/7 | AI 뉴스 검색 및 분석</title>
     <style>
         :root {
             --bg-black: #050505;
@@ -23,7 +23,7 @@
         }
 
         header {
-            padding: 20px 5%;
+            padding: 15px 5%;
             background: rgba(0,0,0,0.9);
             backdrop-filter: blur(15px);
             position: sticky;
@@ -33,11 +33,56 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
         }
 
-        .logo { font-size: 1.5rem; font-weight: 900; color: var(--accent); letter-spacing: -1px; }
+        .logo { font-size: 1.5rem; font-weight: 900; color: var(--accent); letter-spacing: -1px; min-width: 150px; }
 
-        /* 카테고리 네비게이션 */
+        /* 검색창 스타일 */
+        .search-container {
+            flex-grow: 1;
+            max-width: 600px;
+            position: relative;
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 20px;
+            border-radius: 30px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: white;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 10px rgba(255, 62, 62, 0.2);
+        }
+
+        .search-btn {
+            padding: 10px 25px;
+            border-radius: 30px;
+            background: var(--accent);
+            border: none;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            white-space: nowrap;
+        }
+
+        .search-btn:hover {
+            transform: scale(1.05);
+            background: #e63535;
+        }
+
+        /* 카테고리 바 */
         .category-bar {
             background: #000;
             padding: 15px 5%;
@@ -64,19 +109,42 @@
             background: var(--accent);
             color: white;
             border-color: var(--accent);
-            box-shadow: 0 0 15px rgba(255, 62, 62, 0.4);
         }
 
-        /* 메인 컨텐츠 */
         main { padding: 30px 5%; max-width: 1400px; margin: 0 auto; }
+
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
         .analysis-loader {
             display: none;
             text-align: center;
-            padding: 50px;
-            font-style: italic;
-            color: var(--accent);
+            padding: 80px 20px;
         }
+
+        .loader-dots {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: bounce 0.6s infinite alternate;
+        }
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes bounce { to { transform: translateY(-15px); opacity: 0.3; } }
 
         .news-grid {
             display: grid;
@@ -96,22 +164,19 @@
         }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        .news-card:hover { border-color: #555; transform: translateY(-5px); }
-
         .news-img { height: 180px; background-size: cover; background-position: center; }
-
         .news-content { padding: 20px; flex-grow: 1; }
         .news-tag { color: var(--accent); font-size: 0.75rem; font-weight: bold; margin-bottom: 8px; text-transform: uppercase; }
         .news-title { font-size: 1.15rem; font-weight: bold; margin-bottom: 12px; line-height: 1.4; }
-        .news-desc { color: var(--text-gray); font-size: 0.9rem; line-height: 1.6; margin-bottom: 15px; }
+        .news-desc { color: var(--text-gray); font-size: 0.9rem; line-height: 1.6; }
 
         .news-footer { border-top: 1px solid #222; padding: 15px 20px; font-size: 0.8rem; color: #555; display: flex; justify-content: space-between; }
 
-        /* 푸터 */
         footer { padding: 60px 5%; text-align: center; border-top: 1px solid #222; color: #444; }
 
         @media (max-width: 768px) {
-            .news-grid { grid-template-columns: 1fr; }
+            header { flex-direction: column; align-items: stretch; }
+            .logo { text-align: center; }
         }
     </style>
 </head>
@@ -119,7 +184,10 @@
 
 <header>
     <div class="logo">GLOBAL PULSE 24/7</div>
-    <div style="font-size: 0.8rem; color: #666;">실시간 트렌드 분석 시스템 가동 중</div>
+    <div class="search-container">
+        <input type="text" class="search-input" id="searchInput" placeholder="검색어를 입력하세요 (예: 일본관동 지진, 비트코인 등)">
+        <button class="search-btn" onclick="handleSearch()">뉴스 수집</button>
+    </div>
 </header>
 
 <nav class="category-bar" id="categoryBar">
@@ -128,20 +196,21 @@
     <button class="cat-btn" onclick="changeCategory('economy', this)">📈 경제</button>
     <button class="cat-btn" onclick="changeCategory('climate', this)">🌡️ 기후</button>
     <button class="cat-btn" onclick="changeCategory('tech', this)">💻 기술</button>
-    <button class="cat-btn" onclick="changeCategory('politics', this)">🏛️ 정치</button>
-    <button class="cat-btn" onclick="changeCategory('health', this)">🏥 보건</button>
-    <button class="cat-btn" onclick="changeCategory('sports', this)">⚽ 스포츠</button>
-    <button class="cat-btn" onclick="changeCategory('entertainment', this)">🎬 연예</button>
-    <button class="cat-btn" onclick="changeCategory('science', this)">🧪 과학</button>
 </nav>
 
 <main>
-    <div class="analysis-loader" id="loader">
-        <div class="spinner"></div>
-        <p>전 세계 트래픽 데이터 및 뉴스 소스 분석 중...</p>
+    <div id="loader" class="analysis-loader">
+        <div class="loader-dots">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+        <p id="loaderText">전 세계 뉴스 에이전시 및 소셜 미디어 트래픽 스캔 중...</p>
     </div>
-    <div class="news-grid" id="newsGrid">
-        <!-- 뉴스가 여기에 동적으로 삽입됩니다 -->
+
+    <div id="contentSection">
+        <h2 class="section-title" id="sectionTitle">🚨 최근 긴급 뉴스</h2>
+        <div class="news-grid" id="newsGrid"></div>
     </div>
 </main>
 
@@ -154,73 +223,39 @@
         urgent: [
             { title: "일본 관동 지역 규모 6.8 지진 발생", desc: "도쿄 인근 해상에서 강한 지진이 발생하여 신칸센 운행이 일시 중단되었습니다.", tag: "지진/재난", time: "2분 전", img: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=400" },
             { title: "뉴욕 지하철 대규모 정전 사태", desc: "맨해튼 주요 노선이 원인 불명의 정전으로 멈춰 섰습니다. 출근길 대혼란이 예상됩니다.", tag: "교통/사고", time: "15분 전", img: "https://images.unsplash.com/photo-1514565131-fce0801e5785?w=400" },
-            { title: "인도네시아 화산 분화, 주민 대피", desc: "아낙 크라카타우 화산이 다시 활동을 시작하며 반경 5km 이내 접근이 금지되었습니다.", tag: "화산", time: "40분 전", img: "https://images.unsplash.com/photo-1467385829985-2b0fb82b5193?w=400" },
-            { title: "유럽행 항공기 엔진 결함으로 비상착륙", desc: "파리행 여객기가 이륙 직후 엔진 화재로 회항했습니다. 승객 전원 무사합니다.", tag: "항공", time: "1시간 전", img: "https://images.unsplash.com/photo-1544013583-43fde82172c4?w=400" },
-            { title: "호주 산불, 시드니 외곽 위협", desc: "기온 상승과 강풍으로 산불이 통제 불능 상태로 확산되고 있습니다.", tag: "산불", time: "1시간 전", img: "https://images.unsplash.com/photo-1524334228333-0f6db392f8a1?w=400" },
-            { title: "아프리카 동부 대규모 홍수", desc: "케냐와 에티오피아 경계 지역에서 폭우로 인한 인명 피해가 보고되었습니다.", tag: "홍수", time: "2시간 전", img: "https://images.unsplash.com/photo-1468413253725-0d5181091126?w=400" },
-            { title: "글로벌 IT 서비스 접속 장애", desc: "주요 클라우드 플랫폼의 장애로 전 세계 수천 개의 웹사이트가 먹통이 되었습니다.", tag: "네트워크", time: "2시간 전", img: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=400" },
-            { title: "중동 지역 사이버 테러 징후 포착", desc: "국영 정유시설을 겨냥한 악성 코드가 발견되어 비상 경계령이 내려졌습니다.", tag: "해킹", time: "3시간 전", img: "https://images.unsplash.com/photo-1563986768609-322da13575f3?w=400" },
-            { title: "브라질 댐 붕괴 위험 감지", desc: "지속적인 강우로 노후화된 댐의 균열이 발견되어 하류 주민들이 긴급 대피 중입니다.", tag: "시설물", time: "4시간 전", img: "https://images.unsplash.com/photo-1444491741275-3747c53c99b4?w=400" },
-            { title: "캐나다 극지 열차 탈선 사고", desc: "폭설로 인한 선로 이상으로 화물 열차가 탈선했습니다. 인명 피해는 없습니다.", tag: "열차", time: "5시간 전", img: "https://images.unsplash.com/photo-1474487056236-0529c99a78a1?w=400" }
+            { title: "인도네시아 화산 분화, 주민 대피", desc: "아낙 크라카타우 화산이 다시 활동을 시작하며 반경 5km 이내 접근이 금지되었습니다.", tag: "화산", time: "40분 전", img: "https://images.unsplash.com/photo-1467385829985-2b0fb82b5193?w=400" }
         ],
         war: [
-            { title: "전후 우크라이나 재건 프로젝트 시동", desc: "EU와 G7 국가들이 우크라이나의 인프라 복구를 위한 대규모 펀드 조성을 시작했습니다.", tag: "재건", time: "10분 전", img: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400" },
-            { title: "가자지구 임시 휴전 협상 난항", desc: "인질 석방 조건을 둘러싼 양측의 입장 차가 여전히 좁혀지지 않고 있습니다.", tag: "휴전", time: "30분 전", img: "https://images.unsplash.com/photo-1526628953301-3e589a6a8b74?w=400" },
-            { title: "중국-대만 해상 긴장 고조", desc: "대만 해협 근처에서 양측의 해군 함정들이 근접 대치하는 상황이 발생했습니다.", tag: "해상긴장", time: "1시간 전", img: "https://images.unsplash.com/photo-1500076656116-558758c991c1?w=400" },
-            { title: "수단 내전 격화, 난민 200만 명 돌파", desc: "정부군과 준군사조직 간의 전투가 수도 하르툼을 넘어 확산되고 있습니다.", tag: "내전", time: "2시간 전", img: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=400" },
-            { title: "북대서양조약기구(NATO), 동유럽 방어 강화", desc: "러시아의 추가 위협에 대비해 폴란드와 발트 3국에 병력을 추가 배치하기로 했습니다.", tag: "군사", time: "3시간 전", img: "https://images.unsplash.com/photo-1590633362953-7f78329699ad?w=400" },
-            { title: "시리아 북부 공습, 민간인 피해 속출", desc: "국적 불명의 전투기가 반군 거점을 공격하는 과정에서 마을 전체가 파괴되었습니다.", tag: "공습", time: "4시간 전", img: "https://images.unsplash.com/photo-1469041797191-50ace28483c3?w=400" },
-            { title: "예멘 반군, 홍해 상선 드론 공격", desc: "글로벌 물류 경로인 홍해에서 유조선을 노린 자폭 드론 공격이 시도되었습니다.", tag: "해운", time: "5시간 전", img: "https://images.unsplash.com/photo-1520437358207-323b43b50729?w=400" },
-            { title: "신형 극초음속 미사일 실전 배치 완료", desc: "어떤 방어 체계로도 막을 수 없는 최첨단 미사일이 주요 분쟁 지역 인근에 배치되었습니다.", tag: "무기", time: "6시간 전", img: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=400" },
-            { title: "미얀마 반군, 주요 도시 점령 선언", desc: "군사 정권에 맞선 소수민족 무장단체들이 전략적 요충지를 완전히 장악했다고 밝혔습니다.", tag: "내전", time: "7시간 전", img: "https://images.unsplash.com/photo-1508923567004-3a6b8004f3d7?w=400" },
-            { title: "유엔 안보리, 무기 금수 조치 강화 논의", desc: "전쟁 지역으로의 불법 무기 유입을 차단하기 위한 새로운 제재안이 상정되었습니다.", tag: "UN", time: "8시간 전", img: "https://images.unsplash.com/photo-1521295121783-8a321d551ad2?w=400" }
+            { title: "중동 긴장 고조, 호르무즈 해협 봉쇄 위기", desc: "유조선 통행 차단 경고가 나오면서 국제 유가가 배럴당 100달러를 향해 급등하고 있습니다.", tag: "전쟁/분쟁", time: "10분 전", img: "https://images.unsplash.com/photo-1526628953301-3e589a6a8b74?w=400" },
+            { title: "우크라이나 중부 도시 미사일 공격", desc: "주요 기반 시설을 겨냥한 대규모 미사일 공격으로 전력 공급이 중단되었습니다.", tag: "교전", time: "1시간 전", img: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400" }
         ],
         economy: [
             { title: "비트코인, 사상 최고가 10만 달러 돌파", desc: "기관 투자자들의 자금 유입이 가속화되며 가상자산 시장이 유례없는 호황을 맞고 있습니다.", tag: "코인", time: "5분 전", img: "https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=400" },
-            { title: "테슬라 실적 쇼크, 주가 15% 폭락", desc: "전기차 수요 둔화와 가격 경쟁 심화로 인해 시장 예상치를 크게 밑도는 성적을 발표했습니다.", tag: "주식", time: "20분 전", img: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=400" },
-            { title: "글로벌 반도체 공급망 재편 가시화", desc: "미국과 대만의 주요 반도체 기업들이 유럽 내 생산 기지를 확충하기로 결정했습니다.", tag: "IT경제", time: "1시간 전", img: "https://images.unsplash.com/photo-1550745679-5651f528b5ea?w=400" },
-            { title: "인공지능 거품론 확산, 빅테크 조정 국면", desc: "막대한 AI 투자가 실제 수익으로 연결되지 않는다는 우려에 나스닥 지수가 하락했습니다.", tag: "금융", time: "2시간 전", img: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400" },
-            { title: "중국 부동산 개발사 추가 파산 위기", desc: "부동산 시장 침체가 장기화되면서 대형 건설사들의 채무 불이행 위험이 커지고 있습니다.", tag: "중국경제", time: "3시간 전", img: "https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=400" },
-            { title: "유가 하락세 지속, 리터당 1.5달러 붕괴", desc: "산유국들의 증산 결정과 글로벌 경기 침체 우려로 원유 가격이 급락하고 있습니다.", tag: "에너지", time: "4시간 전", img: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=400" },
-            { title: "애플, 새로운 혼합현실 헤드셋 예약 판매", desc: "공개 1시간 만에 초기 물량이 모두 매진되며 공간 컴퓨팅 시대의 서막을 알렸습니다.", tag: "기업", time: "5시간 전", img: "https://images.unsplash.com/photo-1504270997636-07ddfbd48945?w=400" },
-            { title: "원-달러 환율 1,400원선 위협", desc: "강달러 현상이 지속되며 수입 물가 상승에 따른 국내 경제 부담이 가중되고 있습니다.", tag: "외환", time: "6시간 전", img: "https://images.unsplash.com/photo-1580519542036-c47de6196ba5?w=400" },
-            { title: "스타벅스, 대규모 인력 감축 발표", desc: "모바일 주문 효율화와 매장 운영 방식 변경을 위해 전 세계 인력의 3%를 감원합니다.", tag: "고용", time: "7시간 전", img: "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=400" },
-            { title: "골드만삭스, 올해 성장률 전망 상향", desc: "미국 소비 지표가 예상보다 견고하게 나타나며 경기 연착륙 가능성이 높아졌습니다.", tag: "전망", time: "8시간 전", img: "https://images.unsplash.com/photo-1611974714024-462cd909ac5d?w=400" }
+            { title: "연준(Fed), 기준 금리 전격 인하 단행", desc: "경기 침체 우려를 해소하기 위해 0.5%p 금리 인하를 발표했습니다. 시장은 환호 중입니다.", tag: "금융", time: "1시간 전", img: "https://images.unsplash.com/photo-1611974714024-462cd909ac5d?w=400" }
         ],
-        // ... 나머지 카테고리들도 유사하게 10개씩 구성 가능
-        climate: Array(10).fill().map((_, i) => ({ title: `이상기후 업데이트 ${i+1}: 전 지구적 영향`, desc: "기온 상승 속도가 빨라지며 생태계 변화가 극심해지고 있습니다.", tag: "기후/환경", time: `${i+1}시간 전`, img: "https://images.unsplash.com/photo-1516912481808-34061f8bc9a2?w=400" })),
-        tech: Array(10).fill().map((_, i) => ({ title: `미래 기술 뉴스 ${i+1}: AI와 혁신`, desc: "새로운 알고리즘과 하드웨어의 발전이 산업 구조를 바꾸고 있습니다.", tag: "IT/기술", time: `${i+1}시간 전`, img: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=400" })),
-        politics: Array(10).fill().map((_, i) => ({ title: `국제 정치 이슈 ${i+1}`, desc: "국가 간 이해관계와 외교 정책의 변화를 분석합니다.", tag: "정치", time: `${i+1}시간 전`, img: "https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=400" })),
-        health: Array(10).fill().map((_, i) => ({ title: `보건 의료 소식 ${i+1}`, desc: "새로운 치료법 개발과 공중보건 위협에 대한 실시간 보고.", tag: "의료", time: `${i+1}시간 전`, img: "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=400" })),
-        sports: Array(10).fill().map((_, i) => ({ title: `스포츠 하이라이트 ${i+1}`, desc: "전 세계 경기 결과와 이적 시장 소식.", tag: "스포츠", time: `${i+1}시간 전`, img: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=400" })),
-        entertainment: Array(10).fill().map((_, i) => ({ title: `글로벌 엔터 ${i+1}`, desc: "할리우드 소식과 K-콘텐츠의 전 세계적 흥행.", tag: "문화", time: `${i+1}시간 전`, img: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=400" })),
-        science: Array(10).fill().map((_, i) => ({ title: `우주/과학 브리핑 ${i+1}`, desc: "심우주 탐사와 양자 컴퓨터 연구의 최신 진척.", tag: "과학", time: `${i+1}시간 전`, img: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400" })),
+        climate: [
+            { title: "북극 기온 관측 사상 최고치 기록", desc: "예상보다 20년 빠른 빙하 해빙 속도에 해수면 상승 경고가 잇따르고 있습니다.", tag: "이상기후", time: "30분 전", img: "https://images.unsplash.com/photo-1516912481808-34061f8bc9a2?w=400" }
+        ],
+        tech: [
+            { title: "인간형 로봇 '옵티머스', 양산 준비 완료", desc: "테슬라가 내년부터 공장에 휴머노이드 로봇을 실전 배치한다고 공식 발표했습니다.", tag: "AI/로보틱스", time: "2시간 전", img: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=400" }
+        ]
     };
 
     function changeCategory(cat, btn) {
-        // 버튼 활성화 처리
         document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-
-        const grid = document.getElementById('newsGrid');
-        const loader = document.getElementById('loader');
-
-        // 로딩 효과
-        grid.style.display = 'none';
-        loader.style.display = 'block';
-
-        setTimeout(() => {
-            loader.style.display = 'none';
-            grid.style.display = 'grid';
-            renderNews(cat);
-        }, 800);
+        const titleMap = { urgent: '🚨 최근 긴급 뉴스', war: '⚔️ 전쟁 및 분쟁 소식', economy: '📈 경제/금융 리포트', climate: '🌡️ 이상기후 실시간 감시', tech: '💻 미래 기술 혁신' };
+        document.getElementById('sectionTitle').innerText = titleMap[cat];
+        renderNews(newsData[cat]);
     }
 
-    function renderNews(cat) {
+    function renderNews(data) {
         const grid = document.getElementById('newsGrid');
         grid.innerHTML = '';
-
-        const data = newsData[cat] || [];
+        if (data.length === 0) {
+            grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #555; padding: 40px;">관련된 뉴스를 찾을 수 없습니다.</p>';
+            return;
+        }
         data.forEach(item => {
             const card = document.createElement('div');
             card.className = 'news-card';
@@ -231,17 +266,62 @@
                     <div class="news-title">${item.title}</div>
                     <div class="news-desc">${item.desc}</div>
                 </div>
-                <div class="news-footer">
-                    <span>${item.time}</span>
-                    <span style="color: var(--accent)">READ MORE →</span>
-                </div>
+                <div class="news-footer"><span>${item.time}</span><span style="color: var(--accent)">분석 완료 →</span></div>
             `;
             grid.appendChild(card);
         });
     }
 
-    // 초기 화면 로드
-    window.onload = () => renderNews('urgent');
+    async function handleSearch() {
+        const query = document.getElementById('searchInput').value.trim();
+        if (!query) return alert("검색어를 입력해주세요.");
+
+        const loader = document.getElementById('loader');
+        const content = document.getElementById('contentSection');
+        const loaderText = document.getElementById('loaderText');
+
+        content.style.display = 'none';
+        loader.style.display = 'block';
+        
+        // 수집 단계별 텍스트 애니메이션
+        const steps = ["전 세계 뉴스 소스 스캔 중...", `"${query}" 관련 트래픽 분석 중...`, "데이터 유효성 검증 및 기사 요약 중..."];
+        for(let step of steps) {
+            loaderText.innerText = step;
+            await new Promise(r => setTimeout(r, 600));
+        }
+
+        setTimeout(() => {
+            loader.style.display = 'none';
+            content.style.display = 'block';
+            document.getElementById('sectionTitle').innerText = `🔍 "${query}" 수집 결과 (AI 분석)`;
+            
+            // 검색어에 따른 동적 기사 생성 (시뮬레이션)
+            const results = [
+                {
+                    title: `${query} 관련 긴급 분석 리포트`,
+                    desc: `실시간 트래픽 데이터 분석 결과, ${query}에 대한 전 세계적 관심도가 급증하고 있습니다. 현재 주요 외신들이 관련 속보를 타전 중입니다.`,
+                    tag: "AI 수집",
+                    time: "방금 전",
+                    img: "https://images.unsplash.com/photo-1585829365294-118999551cd8?w=400"
+                },
+                {
+                    title: `${query}: 현장 생중계 및 전문가 인터뷰`,
+                    desc: `현지 전문가들은 ${query} 상황이 향후 국제 사회에 미칠 영향에 대해 집중 분석하고 있습니다. 자세한 대응 방안이 논의되고 있습니다.`,
+                    tag: "실시간",
+                    time: "1분 전",
+                    img: "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=400"
+                }
+            ];
+            renderNews(results);
+        }, 300);
+    }
+
+    // 엔터키 검색 지원
+    document.getElementById('searchInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleSearch();
+    });
+
+    window.onload = () => renderNews(newsData.urgent);
 </script>
 
 </body>
