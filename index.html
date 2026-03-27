@@ -3,87 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Global Pulse 24/7 | 실시간 구글 뉴스 수집</title>
+    <title>Global Pulse 24/7 | 실시간 뉴스 리스트</title>
     <style>
         :root {
-            --bg-black: #050505;
-            --card-bg: #121212;
+            --bg-black: #0a0a0a;
+            --list-bg: #111111;
             --accent: #ff3e3e;
-            --nickname-color: #00d2ff;
-            --text-gray: #b0b0b0;
-            --glass: rgba(255, 255, 255, 0.05);
+            --text-main: #ffffff;
+            --text-dim: #888888;
+            --border: #222222;
         }
 
         body {
             font-family: 'Pretendard', -apple-system, sans-serif;
             background-color: var(--bg-black);
-            color: white;
-            margin: 0; padding: 0; overflow-x: hidden;
+            color: var(--text-main);
+            margin: 0; padding: 0;
         }
 
         header {
-            padding: 15px 5%;
-            background: rgba(0,0,0,0.9);
-            backdrop-filter: blur(15px);
+            padding: 20px 5%;
+            background: #000;
+            border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
             position: sticky; top: 0; z-index: 1000;
-            border-bottom: 1px solid #222;
-            display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap;
         }
 
-        .logo { font-size: 1.5rem; font-weight: 900; color: var(--accent); letter-spacing: -1px; }
+        .logo { font-size: 1.4rem; font-weight: 900; color: var(--accent); letter-spacing: -1px; }
 
-        .search-container { flex-grow: 1; max-width: 600px; display: flex; gap: 10px; }
+        .search-container { flex-grow: 1; max-width: 500px; margin: 0 20px; display: flex; gap: 10px; }
         .search-input {
-            width: 100%; padding: 12px 20px; border-radius: 30px;
+            width: 100%; padding: 10px 15px; border-radius: 5px;
             background: #1a1a1a; border: 1px solid #333; color: white; outline: none;
         }
         .search-btn {
-            padding: 10px 25px; border-radius: 30px; background: var(--accent);
+            padding: 8px 20px; border-radius: 5px; background: var(--accent);
             border: none; color: white; font-weight: bold; cursor: pointer;
         }
 
-        .category-bar {
-            background: #000; padding: 15px 5%; display: flex; gap: 10px;
-            overflow-x: auto; border-bottom: 1px solid #222; scrollbar-width: none;
+        .category-nav {
+            background: #000; padding: 10px 5%; display: flex; gap: 15px;
+            border-bottom: 1px solid var(--border); overflow-x: auto;
         }
         .cat-btn {
-            padding: 8px 18px; border-radius: 20px; background: var(--glass);
-            border: 1px solid #333; color: #ccc; cursor: pointer; font-size: 0.9rem;
+            background: none; border: none; color: var(--text-dim);
+            cursor: pointer; font-size: 0.95rem; font-weight: bold; white-space: nowrap;
+            padding-bottom: 5px; transition: 0.3s;
         }
-        .cat-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+        .cat-btn.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
 
-        main { padding: 30px 5%; max-width: 1400px; margin: 0 auto; }
+        main { padding: 30px 5%; max-width: 1000px; margin: 0 auto; }
 
-        .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 30px; }
-
-        .news-card {
-            background: var(--card-bg); border-radius: 15px; overflow: hidden;
-            border: 1px solid #222; transition: 0.3s; display: flex; flex-direction: column;
+        .news-list { display: flex; flex-direction: column; gap: 1px; background: var(--border); border: 1px solid var(--border); }
+        
+        .news-item {
+            background: var(--list-bg);
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            transition: 0.2s;
+            text-decoration: none;
         }
-        .news-card:hover { border-color: var(--accent); transform: translateY(-5px); }
-        .news-img { height: 180px; background-size: cover; background-position: center; background-image: url('https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=400'); }
-        .news-content { padding: 20px; flex-grow: 1; }
-        .news-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 12px; line-height: 1.4; color: #fff; text-decoration: none; display: block; }
-        .news-desc { color: var(--text-gray); font-size: 0.85rem; line-height: 1.6; }
+        .news-item:hover { background: #161616; }
 
-        .analysis-loader { display: none; text-align: center; padding: 80px 20px; }
-        .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
+        .news-info { flex-grow: 1; }
+        .news-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 8px;
+            line-height: 1.4;
+            display: block;
+        }
+        .news-meta { font-size: 0.8rem; color: var(--text-dim); display: flex; gap: 15px; }
+        .news-time { color: var(--accent); }
+
+        .analysis-loader { display: none; text-align: center; padding: 100px 0; }
+        .spinner { width: 30px; height: 30px; border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 15px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        .news-footer { border-top: 1px solid #222; padding: 15px 20px; font-size: 0.75rem; color: #666; display: flex; justify-content: space-between; }
-
-        footer { padding: 60px 5%; text-align: center; border-top: 1px solid #222; color: #444; }
-
-        /* 댓글 스타일 유지 */
-        .comment-section { background: #0a0a0a; border-top: 1px solid #222; max-height: 0; overflow: hidden; transition: 0.4s; }
-        .comment-section.active { max-height: 400px; overflow-y: auto; }
-        .comment-item { padding: 10px 20px; border-bottom: 1px solid #111; font-size: 0.8rem; }
-        .comment-user { color: var(--nickname-color); font-weight: bold; margin-right: 10px; }
-        .comment-form { padding: 15px 20px; display: flex; gap: 8px; }
-        .comment-input { background: #1a1a1a; border: 1px solid #333; color: white; padding: 8px; border-radius: 5px; flex-grow: 1; }
-        .comment-btn { background: var(--accent); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
-
-        @media (max-width: 768px) { header { flex-direction: column; } }
+        @media (max-width: 768px) {
+            header { flex-direction: column; gap: 15px; }
+            .search-container { width: 100%; margin: 0; }
+            .news-item { flex-direction: column; align-items: flex-start; }
+        }
     </style>
 </head>
 <body>
@@ -91,50 +96,49 @@
 <header>
     <div class="logo">GLOBAL PULSE 24/7</div>
     <div class="search-container">
-        <input type="text" class="search-input" id="searchInput" placeholder="구글 뉴스 실시간 수집 (예: 일본 지진, 엔화 환율)">
-        <button class="search-btn" onclick="fetchGoogleNews()">뉴스 수집</button>
+        <input type="text" class="search-input" id="searchInput" placeholder="검색어를 입력하세요...">
+        <button class="search-btn" onclick="fetchNews()">수집</button>
     </div>
 </header>
 
-<nav class="category-bar">
-    <button class="cat-btn active" onclick="changeCategory('headlines', this)">🌐 주요 뉴스</button>
-    <button class="cat-btn" onclick="changeCategory('world', this)">🌍 세계</button>
-    <button class="cat-btn" onclick="changeCategory('business', this)">📈 경제</button>
-    <button class="cat-btn" onclick="changeCategory('technology', this)">💻 IT</button>
-    <button class="cat-btn" onclick="changeCategory('science', this)">🧪 과학</button>
+<nav class="category-nav">
+    <button class="cat-btn active" onclick="changeCategory('주요 뉴스', this)">주요 뉴스</button>
+    <button class="cat-btn" onclick="changeCategory('세계', this)">세계</button>
+    <button class="cat-btn" onclick="changeCategory('경제', this)">경제</button>
+    <button class="cat-btn" onclick="changeCategory('IT 기술', this)">IT/기술</button>
+    <button class="cat-btn" onclick="changeCategory('정치', this)">정치</button>
+    <button class="cat-btn" onclick="changeCategory('환경 이상기후', this)">기후</button>
+    <button class="cat-btn" onclick="changeCategory('과학', this)">과학</button>
 </nav>
 
 <main>
     <div id="loader" class="analysis-loader">
         <div class="spinner"></div>
-        <p id="loaderText">구글 뉴스 라이브 서버에서 데이터 수집 중...</p>
+        <p>구글 실시간 뉴스 데이터 수집 중...</p>
     </div>
 
     <div id="contentSection">
-        <h2 id="sectionTitle" style="margin-bottom: 25px;">🌐 실시간 주요 뉴스 (Live)</h2>
-        <div class="news-grid" id="newsGrid"></div>
+        <h2 id="sectionTitle" style="font-size: 1.2rem; margin-bottom: 20px; color: var(--text-dim);">🌐 실시간 헤드라인 10</h2>
+        <div class="news-list" id="newsList">
+            <!-- 뉴스 항목이 여기에 들어갑니다 -->
+        </div>
     </div>
 </main>
 
-<footer>&copy; 2026 Global Pulse 24/7 | Powered by Google News RSS</footer>
-
 <script>
-    // RSS to JSON 변환 서비스를 사용하여 구글 뉴스 가져오기
     const PROXY_URL = "https://api.rss2json.com/v1/api.json?rss_url=";
-    
-    async function fetchGoogleNews(query = "") {
-        const grid = document.getElementById('newsGrid');
+
+    async function fetchNews(query = "") {
+        const listContainer = document.getElementById('newsList');
         const loader = document.getElementById('loader');
         const content = document.getElementById('contentSection');
         const searchInput = document.getElementById('searchInput');
 
-        // 검색어가 있으면 해당 검색어로, 없으면 현재 입력창 값으로
         const searchTerm = query || searchInput.value.trim() || "주요 뉴스";
         
         content.style.display = 'none';
         loader.style.display = 'block';
 
-        // 구글 뉴스 RSS URL 생성 (한글 뉴스 기준)
         const googleNewsUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(searchTerm)}&hl=ko&gl=KR&ceid=KR:ko`;
         
         try {
@@ -142,83 +146,59 @@
             const data = await response.json();
 
             if (data.status === 'ok') {
-                renderNews(data.items, searchTerm);
+                renderList(data.items.slice(0, 10), searchTerm); // 정확히 10개만 추출
             } else {
-                throw new Error("뉴스 수집 실패");
+                throw new Error("데이터 수집 실패");
             }
         } catch (error) {
             console.error(error);
-            alert("뉴스 수집 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+            listContainer.innerHTML = '<div style="padding:40px; text-align:center;">뉴스를 불러오지 못했습니다. 다시 시도해주세요.</div>';
         } finally {
             loader.style.display = 'none';
             content.style.display = 'block';
         }
     }
 
-    function renderNews(items, term) {
-        const grid = document.getElementById('newsGrid');
+    function renderList(items, term) {
+        const listContainer = document.getElementById('newsList');
         const title = document.getElementById('sectionTitle');
-        grid.innerHTML = '';
-        title.innerText = `🔍 "${term}" 실시간 뉴스 (Google News)`;
+        listContainer.innerHTML = '';
+        title.innerText = `🔍 "${term}" 최신 뉴스 TOP 10`;
 
-        items.forEach((item, index) => {
-            // 이미지 랜덤 배정 (구글 RSS는 이미지를 직접 주지 않는 경우가 많음)
-            const randomImg = `https://picsum.photos/seed/${index + Date.now()}/400/250`;
+        items.forEach(item => {
+            const pubDate = new Date(item.pubDate);
+            const timeStr = `${pubDate.getMonth()+1}/${pubDate.getDate()} ${pubDate.getHours()}:${String(pubDate.getMinutes()).padStart(2, '0')}`;
             
-            const card = document.createElement('div');
-            card.className = 'news-card';
-            card.innerHTML = `
-                <div class="news-img" style="background-image: url('${randomImg}')"></div>
-                <div class="news-content">
-                    <div style="color: var(--accent); font-size: 0.7rem; font-weight: bold; margin-bottom: 5px;">LIVE / ${item.author || '언론사'}</div>
-                    <a href="${item.link}" target="_blank" class="news-title">${item.title}</a>
-                    <div class="news-desc">${item.description.replace(/<[^>]*>?/gm, '').substring(0, 100)}...</div>
-                </div>
-                <div class="news-footer">
-                    <span>${new Date(item.pubDate).toLocaleString()}</span>
-                    <span style="cursor:pointer; color: var(--nickname-color);" onclick="toggleComments(${index})">💬 의견 쓰기</span>
-                </div>
-                <div class="comment-section" id="comments_${index}">
-                    <div class="comment-form">
-                        <input type="text" class="comment-input" id="input_${index}" placeholder="의견을 입력하세요...">
-                        <button class="comment-btn" onclick="addComment(${index})">등록</button>
+            const itemElement = document.createElement('a');
+            itemElement.href = item.link;
+            itemElement.target = "_blank";
+            itemElement.className = "news-item";
+            itemElement.innerHTML = `
+                <div class="news-info">
+                    <span class="news-title">${item.title}</span>
+                    <div class="news-meta">
+                        <span class="news-time">${timeStr}</span>
+                        <span>${item.author || '뉴스 소스'}</span>
                     </div>
-                    <div id="list_${index}"></div>
                 </div>
+                <div style="color: #444; font-size: 1.2rem;">→</div>
             `;
-            grid.appendChild(card);
+            listContainer.appendChild(itemElement);
         });
-    }
-
-    function toggleComments(idx) {
-        document.getElementById(`comments_${idx}`).classList.toggle('active');
-    }
-
-    function addComment(idx) {
-        const input = document.getElementById(`input_${idx}`);
-        const list = document.getElementById(`list_${idx}`);
-        if (!input.value.trim()) return;
-
-        const comment = document.createElement('div');
-        comment.className = 'comment-item';
-        comment.innerHTML = `<span class="comment-user">익명</span><span>${input.value}</span>`;
-        list.prepend(comment);
-        input.value = '';
     }
 
     function changeCategory(cat, btn) {
         document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        fetchGoogleNews(btn.innerText);
+        fetchNews(cat);
     }
 
-    // 엔터키 검색 지원
     document.getElementById('searchInput').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') fetchGoogleNews();
+        if (e.key === 'Enter') fetchNews();
     });
 
     // 초기 로드
-    window.onload = () => fetchGoogleNews("주요 뉴스");
+    window.onload = () => fetchNews("주요 뉴스");
 </script>
 
 </body>
