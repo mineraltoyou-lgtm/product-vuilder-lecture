@@ -6,23 +6,20 @@
     <title>로또 번호 추첨기</title>
     <style>
         :root {
-            --bg-color: #f8f9fa;
-            --text-color: #333;
-            --container-bg: #ffffff;
+            --bg-color: #000000; /* 배경을 순수 검은색으로 설정 */
+            --text-color: #ffffff; /* 텍스트를 흰색으로 설정 */
+            --container-bg: #1e1e1e;
             --btn-bg: #007bff;
             --btn-hover: #0056b3;
-            --toggle-bg: #e0e0e0;
+            --toggle-bg: #333;
             --ball-size: 60px;
             --ball-font: 24px;
         }
 
+        /* 다크모드/라이트모드 구분을 없애거나 검은색 테마로 통일 */
         [data-theme='dark'] {
-            --bg-color: #121212;
-            --text-color: #e0e0e0;
-            --container-bg: #1e1e1e;
-            --btn-bg: #3700b3;
-            --btn-hover: #4b00d1;
-            --toggle-bg: #333;
+            --bg-color: #000000;
+            --text-color: #ffffff;
         }
 
         body {
@@ -47,7 +44,7 @@
             padding: 8px 16px;
             border-radius: 20px;
             background-color: var(--toggle-bg);
-            border: none;
+            border: 1px solid #444;
             color: var(--text-color);
             cursor: pointer;
             font-weight: bold;
@@ -61,6 +58,7 @@
             font-size: 2.5rem;
             text-align: center;
             word-break: keep-all;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
 
         #result {
@@ -84,7 +82,7 @@
             font-size: var(--ball-font);
             font-weight: bold;
             color: white;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 15px rgba(255,255,255,0.1);
             animation: bounce 0.5s ease-out forwards;
             flex-shrink: 0;
         }
@@ -111,61 +109,29 @@
             border-radius: 12px;
             cursor: pointer;
             transition: all 0.2s;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
 
         .main-btn:hover {
             background-color: var(--btn-hover);
             transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.4);
         }
 
-        .main-btn:active {
-            transform: translateY(0);
-        }
-
-        /* 반응형 설정: 모바일 기기 */
+        /* 반응형 설정 */
         @media (max-width: 480px) {
             :root {
                 --ball-size: 50px;
                 --ball-font: 20px;
             }
-            
-            h1 {
-                font-size: 1.8rem;
-                margin-top: 60px;
-            }
-
-            #result {
-                gap: 10px;
-            }
-
-            .main-btn {
-                width: 90%;
-                padding: 14px;
-                font-size: 1.1rem;
-            }
-
-            .theme-toggle {
-                top: 10px;
-                right: 10px;
-                font-size: 12px;
-                padding: 6px 12px;
-            }
-        }
-
-        /* 아주 작은 기기 대응 */
-        @media (max-width: 350px) {
-            :root {
-                --ball-size: 45px;
-                --ball-font: 18px;
-            }
+            h1 { font-size: 1.8rem; margin-top: 60px; }
+            .main-btn { width: 90%; }
         }
     </style>
 </head>
 <body>
 
-    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">다크 모드</button>
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">배경 전환</button>
 
     <h1>🍀 로또 번호 추첨기</h1>
     
@@ -174,38 +140,26 @@
     <button class="main-btn" onclick="generateNumbers()">번호 추첨하기</button>
 
     <script>
-        const currentTheme = localStorage.getItem('theme') || 'light';
+        // 초기 설정 (기본 블랙)
+        const currentTheme = localStorage.getItem('theme') || 'dark';
         document.documentElement.setAttribute('data-theme', currentTheme);
-        updateToggleButtonText(currentTheme);
 
         function toggleTheme() {
             const theme = document.documentElement.getAttribute('data-theme');
             const newTheme = theme === 'light' ? 'dark' : 'light';
-            
             document.documentElement.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
-            updateToggleButtonText(newTheme);
-        }
-
-        function updateToggleButtonText(theme) {
-            const btn = document.getElementById('themeBtn');
-            btn.innerText = theme === 'light' ? '다크 모드' : '라이트 모드';
         }
 
         function generateNumbers() {
             const resultDiv = document.getElementById('result');
             resultDiv.innerHTML = '';
-
             const numbers = [];
             while (numbers.length < 6) {
                 const num = Math.floor(Math.random() * 45) + 1;
-                if (!numbers.includes(num)) {
-                    numbers.push(num);
-                }
+                if (!numbers.includes(num)) numbers.push(num);
             }
-
             numbers.sort((a, b) => a - b);
-
             numbers.forEach((num, index) => {
                 setTimeout(() => {
                     const ball = document.createElement('div');
