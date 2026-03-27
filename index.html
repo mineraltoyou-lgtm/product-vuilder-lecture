@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Global Pulse 24/7 | AI 뉴스 검색 및 분석</title>
+    <title>Global Pulse 24/7 | 실시간 뉴스 및 커뮤니티</title>
     <style>
         :root {
             --bg-black: #050505;
@@ -17,166 +17,85 @@
             font-family: 'Pretendard', -apple-system, sans-serif;
             background-color: var(--bg-black);
             color: white;
-            margin: 0;
-            padding: 0;
-            overflow-x: hidden;
+            margin: 0; padding: 0; overflow-x: hidden;
         }
 
         header {
             padding: 15px 5%;
             background: rgba(0,0,0,0.9);
             backdrop-filter: blur(15px);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
+            position: sticky; top: 0; z-index: 1000;
             border-bottom: 1px solid #222;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 20px;
-            flex-wrap: wrap;
+            display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap;
         }
 
-        .logo { font-size: 1.5rem; font-weight: 900; color: var(--accent); letter-spacing: -1px; min-width: 150px; }
+        .logo { font-size: 1.5rem; font-weight: 900; color: var(--accent); letter-spacing: -1px; }
 
-        /* 검색창 스타일 */
-        .search-container {
-            flex-grow: 1;
-            max-width: 600px;
-            position: relative;
-            display: flex;
-            gap: 10px;
-        }
-
+        .search-container { flex-grow: 1; max-width: 600px; display: flex; gap: 10px; }
         .search-input {
-            width: 100%;
-            padding: 12px 20px;
-            border-radius: 30px;
-            background: #1a1a1a;
-            border: 1px solid #333;
-            color: white;
-            font-size: 0.95rem;
-            outline: none;
-            transition: all 0.3s;
+            width: 100%; padding: 12px 20px; border-radius: 30px;
+            background: #1a1a1a; border: 1px solid #333; color: white; outline: none;
         }
-
-        .search-input:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 10px rgba(255, 62, 62, 0.2);
-        }
-
         .search-btn {
-            padding: 10px 25px;
-            border-radius: 30px;
-            background: var(--accent);
-            border: none;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
-            white-space: nowrap;
+            padding: 10px 25px; border-radius: 30px; background: var(--accent);
+            border: none; color: white; font-weight: bold; cursor: pointer;
         }
 
-        .search-btn:hover {
-            transform: scale(1.05);
-            background: #e63535;
-        }
-
-        /* 카테고리 바 */
         .category-bar {
-            background: #000;
-            padding: 15px 5%;
-            display: flex;
-            gap: 10px;
-            overflow-x: auto;
-            white-space: nowrap;
-            border-bottom: 1px solid #222;
-            scrollbar-width: none;
+            background: #000; padding: 15px 5%; display: flex; gap: 10px;
+            overflow-x: auto; border-bottom: 1px solid #222; scrollbar-width: none;
         }
-        .category-bar::-webkit-scrollbar { display: none; }
-
         .cat-btn {
-            padding: 8px 18px;
-            border-radius: 20px;
-            background: var(--glass);
-            border: 1px solid #333;
-            color: #ccc;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: all 0.3s;
+            padding: 8px 18px; border-radius: 20px; background: var(--glass);
+            border: 1px solid #333; color: #ccc; cursor: pointer; font-size: 0.9rem;
         }
-        .cat-btn.active {
-            background: var(--accent);
-            color: white;
-            border-color: var(--accent);
-        }
+        .cat-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
 
         main { padding: 30px 5%; max-width: 1400px; margin: 0 auto; }
 
-        .section-title {
-            font-size: 1.5rem;
-            margin-bottom: 25px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .analysis-loader {
-            display: none;
-            text-align: center;
-            padding: 80px 20px;
-        }
-
-        .loader-dots {
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            margin-bottom: 20px;
-        }
-
-        .dot {
-            width: 12px;
-            height: 12px;
-            background: var(--accent);
-            border-radius: 50%;
-            animation: bounce 0.6s infinite alternate;
-        }
-        .dot:nth-child(2) { animation-delay: 0.2s; }
-        .dot:nth-child(3) { animation-delay: 0.4s; }
-
-        @keyframes bounce { to { transform: translateY(-15px); opacity: 0.3; } }
-
-        .news-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 25px;
-        }
+        .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 30px; }
 
         .news-card {
-            background: var(--card-bg);
-            border-radius: 15px;
-            overflow: hidden;
-            border: 1px solid #222;
-            transition: 0.3s;
-            display: flex;
-            flex-direction: column;
-            animation: fadeIn 0.5s ease forwards;
+            background: var(--card-bg); border-radius: 15px; overflow: hidden;
+            border: 1px solid #222; transition: 0.3s; display: flex; flex-direction: column;
         }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
         .news-img { height: 180px; background-size: cover; background-position: center; }
         .news-content { padding: 20px; flex-grow: 1; }
-        .news-tag { color: var(--accent); font-size: 0.75rem; font-weight: bold; margin-bottom: 8px; text-transform: uppercase; }
         .news-title { font-size: 1.15rem; font-weight: bold; margin-bottom: 12px; line-height: 1.4; }
         .news-desc { color: var(--text-gray); font-size: 0.9rem; line-height: 1.6; }
 
-        .news-footer { border-top: 1px solid #222; padding: 15px 20px; font-size: 0.8rem; color: #555; display: flex; justify-content: space-between; }
+        /* 댓글 섹션 스타일 */
+        .comment-section {
+            background: #0a0a0a; border-top: 1px solid #222;
+            max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out;
+        }
+        .comment-section.active { max-height: 500px; overflow-y: auto; }
+
+        .comment-header { padding: 15px 20px; font-size: 0.85rem; font-weight: bold; color: #888; border-bottom: 1px solid #1a1a1a; }
+        
+        .comment-list { padding: 10px 20px; }
+        .comment-item { margin-bottom: 15px; font-size: 0.85rem; border-bottom: 1px solid #1a1a1a; padding-bottom: 10px; }
+        .comment-user { color: var(--accent); font-weight: bold; margin-right: 8px; }
+        .comment-text { color: #ddd; }
+
+        .comment-form { padding: 15px 20px; display: flex; flex-direction: column; gap: 10px; }
+        .comment-input-row { display: flex; gap: 10px; }
+        .comment-name { width: 80px; background: #1a1a1a; border: 1px solid #333; color: white; padding: 8px; border-radius: 5px; font-size: 0.8rem; }
+        .comment-msg { flex-grow: 1; background: #1a1a1a; border: 1px solid #333; color: white; padding: 8px; border-radius: 5px; font-size: 0.8rem; }
+        .comment-submit { background: #333; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; }
+        .comment-submit:hover { background: var(--accent); }
+
+        .news-footer {
+            border-top: 1px solid #222; padding: 15px 20px; font-size: 0.8rem;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .comment-toggle { cursor: pointer; color: #666; transition: 0.3s; }
+        .comment-toggle:hover { color: var(--accent); }
 
         footer { padding: 60px 5%; text-align: center; border-top: 1px solid #222; color: #444; }
 
         @media (max-width: 768px) {
             header { flex-direction: column; align-items: stretch; }
-            .logo { text-align: center; }
         }
     </style>
 </head>
@@ -185,141 +104,105 @@
 <header>
     <div class="logo">GLOBAL PULSE 24/7</div>
     <div class="search-container">
-        <input type="text" class="search-input" id="searchInput" placeholder="검색어를 입력하세요 (예: 일본관동 지진, 비트코인 등)">
+        <input type="text" class="search-input" id="searchInput" placeholder="검색어를 입력하세요 (예: 일본관동 지진)">
         <button class="search-btn" onclick="handleSearch()">뉴스 수집</button>
     </div>
 </header>
 
-<nav class="category-bar" id="categoryBar">
+<nav class="category-bar">
     <button class="cat-btn active" onclick="changeCategory('urgent', this)">🚨 긴급</button>
     <button class="cat-btn" onclick="changeCategory('war', this)">⚔️ 전쟁</button>
     <button class="cat-btn" onclick="changeCategory('economy', this)">📈 경제</button>
     <button class="cat-btn" onclick="changeCategory('climate', this)">🌡️ 기후</button>
-    <button class="cat-btn" onclick="changeCategory('tech', this)">💻 기술</button>
 </nav>
 
 <main>
-    <div id="loader" class="analysis-loader">
-        <div class="loader-dots">
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
-        </div>
-        <p id="loaderText">전 세계 뉴스 에이전시 및 소셜 미디어 트래픽 스캔 중...</p>
-    </div>
-
-    <div id="contentSection">
-        <h2 class="section-title" id="sectionTitle">🚨 최근 긴급 뉴스</h2>
-        <div class="news-grid" id="newsGrid"></div>
-    </div>
+    <h2 id="sectionTitle" style="margin-bottom: 25px;">🚨 최근 긴급 뉴스</h2>
+    <div class="news-grid" id="newsGrid"></div>
 </main>
 
-<footer>
-    &copy; 2026 Global Pulse AI News. 전 세계 140여 개 뉴스 에이전시와 실시간 연동 중.
-</footer>
+<footer>&copy; 2026 Global Pulse AI News.</footer>
 
 <script>
     const newsData = {
-        urgent: [
-            { title: "일본 관동 지역 규모 6.8 지진 발생", desc: "도쿄 인근 해상에서 강한 지진이 발생하여 신칸센 운행이 일시 중단되었습니다.", tag: "지진/재난", time: "2분 전", img: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=400" },
-            { title: "뉴욕 지하철 대규모 정전 사태", desc: "맨해튼 주요 노선이 원인 불명의 정전으로 멈춰 섰습니다. 출근길 대혼란이 예상됩니다.", tag: "교통/사고", time: "15분 전", img: "https://images.unsplash.com/photo-1514565131-fce0801e5785?w=400" },
-            { title: "인도네시아 화산 분화, 주민 대피", desc: "아낙 크라카타우 화산이 다시 활동을 시작하며 반경 5km 이내 접근이 금지되었습니다.", tag: "화산", time: "40분 전", img: "https://images.unsplash.com/photo-1467385829985-2b0fb82b5193?w=400" }
-        ],
-        war: [
-            { title: "중동 긴장 고조, 호르무즈 해협 봉쇄 위기", desc: "유조선 통행 차단 경고가 나오면서 국제 유가가 배럴당 100달러를 향해 급등하고 있습니다.", tag: "전쟁/분쟁", time: "10분 전", img: "https://images.unsplash.com/photo-1526628953301-3e589a6a8b74?w=400" },
-            { title: "우크라이나 중부 도시 미사일 공격", desc: "주요 기반 시설을 겨냥한 대규모 미사일 공격으로 전력 공급이 중단되었습니다.", tag: "교전", time: "1시간 전", img: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400" }
-        ],
-        economy: [
-            { title: "비트코인, 사상 최고가 10만 달러 돌파", desc: "기관 투자자들의 자금 유입이 가속화되며 가상자산 시장이 유례없는 호황을 맞고 있습니다.", tag: "코인", time: "5분 전", img: "https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=400" },
-            { title: "연준(Fed), 기준 금리 전격 인하 단행", desc: "경기 침체 우려를 해소하기 위해 0.5%p 금리 인하를 발표했습니다. 시장은 환호 중입니다.", tag: "금융", time: "1시간 전", img: "https://images.unsplash.com/photo-1611974714024-462cd909ac5d?w=400" }
-        ],
-        climate: [
-            { title: "북극 기온 관측 사상 최고치 기록", desc: "예상보다 20년 빠른 빙하 해빙 속도에 해수면 상승 경고가 잇따르고 있습니다.", tag: "이상기후", time: "30분 전", img: "https://images.unsplash.com/photo-1516912481808-34061f8bc9a2?w=400" }
-        ],
-        tech: [
-            { title: "인간형 로봇 '옵티머스', 양산 준비 완료", desc: "테슬라가 내년부터 공장에 휴머노이드 로봇을 실전 배치한다고 공식 발표했습니다.", tag: "AI/로보틱스", time: "2시간 전", img: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=400" }
-        ]
+        urgent: [{ id: 1, title: "일본 관동 지역 규모 6.8 지진 발생", desc: "도쿄 인근 해상에서 강한 지진이 발생하여 신칸센 운행이 일시 중단되었습니다.", tag: "지진/재난", time: "2분 전", img: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=400" }],
+        war: [{ id: 2, title: "중동 긴장 고조, 호르무즈 해협 봉쇄 위기", desc: "국제 유가가 배럴당 100달러를 향해 급등하고 있습니다.", tag: "전쟁/분쟁", time: "10분 전", img: "https://images.unsplash.com/photo-1526628953301-3e589a6a8b74?w=400" }],
+        economy: [{ id: 3, title: "비트코인, 사상 최고가 10만 달러 돌파", desc: "가상자산 시장이 유례없는 호황을 맞고 있습니다.", tag: "코인", time: "5분 전", img: "https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=400" }],
+        climate: [{ id: 4, title: "북극 기온 관측 사상 최고치 기록", desc: "예상보다 빠른 빙하 해빙 속도에 경고가 잇따르고 있습니다.", tag: "이상기후", time: "30분 전", img: "https://images.unsplash.com/photo-1516912481808-34061f8bc9a2?w=400" }]
     };
 
     function changeCategory(cat, btn) {
         document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        const titleMap = { urgent: '🚨 최근 긴급 뉴스', war: '⚔️ 전쟁 및 분쟁 소식', economy: '📈 경제/금융 리포트', climate: '🌡️ 이상기후 실시간 감시', tech: '💻 미래 기술 혁신' };
-        document.getElementById('sectionTitle').innerText = titleMap[cat];
         renderNews(newsData[cat]);
     }
 
     function renderNews(data) {
         const grid = document.getElementById('newsGrid');
         grid.innerHTML = '';
-        if (data.length === 0) {
-            grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #555; padding: 40px;">관련된 뉴스를 찾을 수 없습니다.</p>';
-            return;
-        }
         data.forEach(item => {
+            const comments = JSON.parse(localStorage.getItem(`comments_${item.id}`) || '[]');
             const card = document.createElement('div');
             card.className = 'news-card';
             card.innerHTML = `
                 <div class="news-img" style="background-image: url('${item.img}')"></div>
                 <div class="news-content">
-                    <div class="news-tag">${item.tag}</div>
+                    <div style="color: var(--accent); font-size: 0.7rem; font-weight: bold; margin-bottom: 5px;">${item.tag}</div>
                     <div class="news-title">${item.title}</div>
                     <div class="news-desc">${item.desc}</div>
                 </div>
-                <div class="news-footer"><span>${item.time}</span><span style="color: var(--accent)">분석 완료 →</span></div>
+                <div class="news-footer">
+                    <span>${item.time}</span>
+                    <span class="comment-toggle" onclick="toggleComments(${item.id})">💬 댓글 ${comments.length}</span>
+                </div>
+                <div class="comment-section" id="comments_${item.id}">
+                    <div class="comment-header">실시간 오피니언</div>
+                    <div class="comment-list" id="list_${item.id}">
+                        ${comments.map(c => `<div class="comment-item"><span class="comment-user">${c.user}</span><span class="comment-text">${c.text}</span></div>`).join('')}
+                    </div>
+                    <div class="comment-form">
+                        <div class="comment-input-row">
+                            <input type="text" class="comment-name" id="name_${item.id}" placeholder="닉네임">
+                            <input type="text" class="comment-msg" id="msg_${item.id}" placeholder="의견을 입력하세요...">
+                            <button class="comment-submit" onclick="addComment(${item.id})">등록</button>
+                        </div>
+                    </div>
+                </div>
             `;
             grid.appendChild(card);
         });
     }
 
-    async function handleSearch() {
-        const query = document.getElementById('searchInput').value.trim();
-        if (!query) return alert("검색어를 입력해주세요.");
-
-        const loader = document.getElementById('loader');
-        const content = document.getElementById('contentSection');
-        const loaderText = document.getElementById('loaderText');
-
-        content.style.display = 'none';
-        loader.style.display = 'block';
-        
-        // 수집 단계별 텍스트 애니메이션
-        const steps = ["전 세계 뉴스 소스 스캔 중...", `"${query}" 관련 트래픽 분석 중...`, "데이터 유효성 검증 및 기사 요약 중..."];
-        for(let step of steps) {
-            loaderText.innerText = step;
-            await new Promise(r => setTimeout(r, 600));
-        }
-
-        setTimeout(() => {
-            loader.style.display = 'none';
-            content.style.display = 'block';
-            document.getElementById('sectionTitle').innerText = `🔍 "${query}" 수집 결과 (AI 분석)`;
-            
-            // 검색어에 따른 동적 기사 생성 (시뮬레이션)
-            const results = [
-                {
-                    title: `${query} 관련 긴급 분석 리포트`,
-                    desc: `실시간 트래픽 데이터 분석 결과, ${query}에 대한 전 세계적 관심도가 급증하고 있습니다. 현재 주요 외신들이 관련 속보를 타전 중입니다.`,
-                    tag: "AI 수집",
-                    time: "방금 전",
-                    img: "https://images.unsplash.com/photo-1585829365294-118999551cd8?w=400"
-                },
-                {
-                    title: `${query}: 현장 생중계 및 전문가 인터뷰`,
-                    desc: `현지 전문가들은 ${query} 상황이 향후 국제 사회에 미칠 영향에 대해 집중 분석하고 있습니다. 자세한 대응 방안이 논의되고 있습니다.`,
-                    tag: "실시간",
-                    time: "1분 전",
-                    img: "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=400"
-                }
-            ];
-            renderNews(results);
-        }, 300);
+    function toggleComments(id) {
+        const section = document.getElementById(`comments_${id}`);
+        section.classList.toggle('active');
     }
 
-    // 엔터키 검색 지원
-    document.getElementById('searchInput').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') handleSearch();
-    });
+    function addComment(id) {
+        const nameInput = document.getElementById(`name_${id}`);
+        const msgInput = document.getElementById(`msg_${id}`);
+        const user = nameInput.value.trim() || '익명';
+        const text = msgInput.value.trim();
+
+        if (!text) return alert("내용을 입력해주세요.");
+
+        const comments = JSON.parse(localStorage.getItem(`comments_${id}`) || '[]');
+        comments.push({ user, text });
+        localStorage.setItem(`comments_${id}`, JSON.stringify(comments));
+
+        nameInput.value = '';
+        msgInput.value = '';
+        renderNews(Object.values(newsData).flat().filter(n => n.id === id)); // 해당 카드만 리렌더링 (간략화)
+        document.getElementById(`comments_${id}`).classList.add('active'); // 열린 상태 유지
+    }
+
+    async function handleSearch() {
+        const query = document.getElementById('searchInput').value.trim();
+        if (!query) return;
+        document.getElementById('sectionTitle').innerText = `🔍 "${query}" 수집 결과`;
+        const searchResults = [{ id: Date.now(), title: `${query} 관련 긴급 분석 리포트`, desc: `실시간 트래픽 데이터 분석 결과, ${query}에 대한 전 세계적 관심도가 급증하고 있습니다.`, tag: "AI 수집", time: "방금 전", img: "https://images.unsplash.com/photo-1585829365294-118999551cd8?w=400" }];
+        renderNews(searchResults);
+    }
 
     window.onload = () => renderNews(newsData.urgent);
 </script>
