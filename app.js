@@ -1,11 +1,13 @@
 let riskChart;
-const RISK_THRESHOLD = 60; // 녹조 위험 기준
-const DISPLAY_DAYS = 15;   // 최근 15일만 표시
+const RISK_THRESHOLD = 60;
+const DISPLAY_DAYS = 15;
+const HIGHLIGHT_COLOR = 'rgba(255, 0, 0, 0.3)'; // 위험 배경
+const NORMAL_COLOR = 'rgba(75, 192, 192, 1)';    // 안전 선
 
 async function getLatestData() {
     const res = await fetch('data.csv');
     const text = await res.text();
-    const lines = text.trim().split('\n').slice(1); // 헤더 제외
+    const lines = text.trim().split('\n').slice(1); 
     const data = lines.map(line => {
         const [date, location, water_temp, chlorophyll, oxygen, pH] = line.split(',');
         return {
@@ -27,8 +29,6 @@ async function calculateRisk() {
 
     const chartData = await getLatestData();
     const filtered = chartData.filter(d => d.location === location);
-    
-    // 최근 15일만
     const last15 = filtered.slice(-DISPLAY_DAYS);
 
     const latest = last15.slice(-1)[0];
@@ -53,8 +53,10 @@ function updateChart(chartData) {
     const labels = chartData.map(d => d.timestamp.toLocaleDateString());
     const data = chartData.map(d => d.risk);
 
-    // 빨간선: 위험 기준
     const thresholdLine = Array(chartData.length).fill(RISK_THRESHOLD);
+
+    // 배경 색상 설정 (위험 구간)
+    const bgColors = chartData.map(d => d.risk >= RISK_THRESHOLD ? HIGHLIGHT_COLOR : 'rgba(0,0,0,0)');
 
     if (riskChart) riskChart.destroy();
 
@@ -67,9 +69,12 @@ function updateChart(chartData) {
                 {
                     label: 'Risk Score',
                     data,
-                    borderColor: 'rgba(75,192,192,1)',
+                    borderColor: NORMAL_COLOR,
+                    backgroundColor: bgColors,
                     tension: 0.1,
-                    fill: false
+                    fill: true,
+                    pointRadius: chartData.map(d => d.risk >= RISK_THRESHOLD ? 6 : 3), // 위험 점 강조
+                    pointBackgroundColor: chartData.map(d => d.risk >= RISK_THRESHOLD ? 'red' : NORMAL_COLOR)
                 },
                 {
                     label: 'Risk Threshold',
@@ -82,12 +87,15 @@ function updateChart(chartData) {
             ]
         },
         options: {
-            scales: { y: { beginAtZero: true } }
+            scales: { y: { beginAtZero: true } },
+            plugins: {
+                legend: { display: true }
+            }
         }
     });
 }
 
-// 브라우저 열려 있는 동안만 주기적으로 최신 차트 갱신 (5초)
+// 브라우저 켜 있는 동안 5초마다 갱신
 async function autoRefresh() {
     await calculateRisk();
     setTimeout(autoRefresh, 5000);
