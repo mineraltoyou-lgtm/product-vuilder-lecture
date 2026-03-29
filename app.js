@@ -1,4 +1,5 @@
 let riskChart;
+const RISK_THRESHOLD = 60; // 녹조 위험 기준
 
 async function getLatestData() {
     const res = await fetch('data.csv');
@@ -24,7 +25,12 @@ async function calculateRisk() {
     if (!location) { alert('위치를 선택해주세요.'); return; }
 
     const chartData = await getLatestData();
-    const latest = chartData.filter(d => d.location === location).slice(-1)[0];
+    const filtered = chartData.filter(d => d.location === location);
+    
+    // 최근 30일만
+    const last30 = filtered.slice(-30);
+
+    const latest = last30.slice(-1)[0];
     if (!latest) { alert('해당 위치 데이터가 없습니다.'); return; }
 
     const risk = latest.risk;
@@ -33,9 +39,7 @@ async function calculateRisk() {
     document.getElementById('riskScore').textContent = risk.toFixed(2);
     document.getElementById('status').textContent = status;
 
-    if (risk > 60) alert('⚠️ DANGER: High risk of algae bloom!');
-
-    updateChart(chartData.filter(d => d.location === location));
+    updateChart(last30);
 }
 
 function getStatus(risk) {
@@ -48,15 +52,45 @@ function updateChart(chartData) {
     const labels = chartData.map(d => d.timestamp.toLocaleDateString());
     const data = chartData.map(d => d.risk);
 
+    // 빨간선: 위험 기준
+    const thresholdLine = Array(chartData.length).fill(RISK_THRESHOLD);
+
     if (riskChart) riskChart.destroy();
 
     const ctx = document.getElementById('riskChart').getContext('2d');
     riskChart = new Chart(ctx, {
         type: 'line',
-        data: { labels, datasets: [{ label: 'Risk Score History', data, borderColor: 'rgba(75,192,192,1)', tension: 0.1 }] },
-        options: { scales: { y: { beginAtZero: true } } }
+        data: {
+            labels,
+            datasets: [
+                {
+                    label: 'Risk Score',
+                    data,
+                    borderColor: 'rgba(75,192,192,1)',
+                    tension: 0.1,
+                    fill: false
+                },
+                {
+                    label: 'Risk Threshold',
+                    data: thresholdLine,
+                    borderColor: 'red',
+                    borderDash: [5,5],
+                    pointRadius: 0,
+                    fill: false
+                }
+            ]
+        },
+        options: {
+            scales: { y: { beginAtZero: true } }
+        }
     });
 }
 
-// 초기 차트 로드
-getLatestData().then(data => updateChart(data));
+// 브라우저 열려 있는 동안만 주기적으로 최신 차트 갱신 (예: 5초)
+async function autoRefresh() {
+    await calculateRisk();
+    setTimeout(autoRefresh, 5000); // 5초마다 갱신
+}
+
+// 초기 실행
+autoRefresh();
