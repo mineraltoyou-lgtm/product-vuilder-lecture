@@ -4,10 +4,8 @@ from datetime import datetime, timedelta
 import os
 
 filename = "data.csv"
-
 locations = ["낙동강", "한강", "금강"]
 
-# 🔥 데이터 생성 함수
 def generate_row(date, loc):
     water_temp = random.randint(24, 30)
     chlorophyll = random.randint(15, 60)
@@ -23,7 +21,7 @@ def generate_row(date, loc):
         ph
     ]
 
-# 🔥 1년 데이터 생성 (처음 1회만 실행)
+# 🔥 1년 데이터 생성
 def create_initial_data():
     if os.path.exists(filename):
         print("이미 data.csv 존재 → 초기 생성 스킵")
@@ -31,7 +29,7 @@ def create_initial_data():
 
     start_date = datetime.today() - timedelta(days=365)
 
-    with open(filename, mode="w", newline="", encoding="utf-8") as file:
+    with open(filename, "w", newline="", encoding="utf-8") as file:
         writer = csv.writer(file)
         writer.writerow(["date", "location", "water_temp", "chlorophyll", "oxygen", "pH"])
 
@@ -43,18 +41,32 @@ def create_initial_data():
 
     print("1년치 데이터 생성 완료 ✅")
 
+# 🔥 마지막 줄 개행 보정 함수 (핵심 추가)
+def ensure_newline():
+    if not os.path.exists(filename):
+        return
+
+    with open(filename, "rb+") as file:
+        file.seek(-1, os.SEEK_END)
+        last_char = file.read(1)
+
+        if last_char != b"\n":
+            file.write(b"\n")
+
 # 🔥 오늘 데이터 추가
 def append_today_data():
     today = datetime.today().strftime("%Y-%m-%d")
 
-    # 이미 오늘 데이터 있는지 확인
     if os.path.exists(filename):
         with open(filename, "r", encoding="utf-8") as file:
             if today in file.read():
                 print("오늘 데이터 이미 존재 → 추가 안함")
                 return
 
-    with open(filename, mode="a", newline="", encoding="utf-8") as file:
+    # 👉 추가 전에 줄바꿈 보정
+    ensure_newline()
+
+    with open(filename, "a", newline="", encoding="utf-8") as file:
         writer = csv.writer(file)
 
         for loc in locations:
