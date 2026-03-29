@@ -2,10 +2,11 @@ name: Update CSV Daily
 
 on:
   schedule:
-    - cron: "0 0 * * *"  # 매일 00:00 UTC (한국은 오전 9시)
+    - cron: "0 0 * * *"  # 매일 00:00 UTC
+  workflow_dispatch:     # 👈 이거 추가 (핵심)
+
 permissions:
   contents: write
-
 
 jobs:
   update:
@@ -23,5 +24,5 @@ jobs:
           git config --global user.name "bot"
           git config --global user.email "bot@example.com"
           git add data.csv
-          git commit -m "자동 데이터 업데이트"
+          git commit -m "자동 데이터 업데이트" || echo "변경 없음"
           git push
