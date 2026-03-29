@@ -1,78 +1,91 @@
-let riskChart;
+// -----------------
+// 1. 가상 데이터 생성
+// -----------------
+const locations = ["낙동강", "한강", "금강"];
+const chartDays = 15; // 최근 15일
+const chartData = [];
+const chartLabels = [];
 
-async function calculateRisk() {
-    const location = document.getElementById('location').value;
-    if (!location) return alert('위치를 선택하세요.');
+function generateFakeData() {
+  const today = new Date();
+  for (let i = chartDays - 1; i >= 0; i--) {
+    const date = new Date(today);
+    date.setDate(today.getDate() - i);
+    chartLabels.push(date.toLocaleDateString());
 
-    const response = await fetch('data.csv');
-    const csvText = await response.text();
-    const rows = csvText.split('\n').slice(1).map(r => r.split(','));
-    
-    // 최근 15일 데이터 필터
-    const today = new Date();
-    const past15 = new Date(today.getTime() - 14*24*60*60*1000);
-    const dataFiltered = rows.filter(r => {
-        const date = new Date(r[0]);
-        return date >= past15 && r[1] === location;
-    });
+    // 랜덤 위험 점수 (0~100)
+    const risk = Math.floor(Math.random() * 100);
+    chartData.push(risk);
+  }
+}
+generateFakeData();
 
-    const labels = dataFiltered.map(r => r[0]);
-    const risks = dataFiltered.map(r => {
-        const temp = parseFloat(r[2]);
-        const chl = parseFloat(r[3]);
-        const oxy = parseFloat(r[4]);
-        return temp*0.4 + chl*0.4 - oxy*0.2;
-    });
+// -----------------
+// 2. 차트 생성
+// -----------------
+const ctx = document.getElementById('riskChart').getContext('2d');
 
-    const latestRisk = risks[risks.length-1];
-    document.getElementById('riskScore').textContent = latestRisk.toFixed(2);
-    document.getElementById('status').textContent = getStatus(latestRisk);
-
-    // 차트 생성
-    if (riskChart) riskChart.destroy();
-    const ctx = document.getElementById('riskChart').getContext('2d');
-    riskChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Risk Score (최근 15일)',
-                data: risks,
-                borderColor: 'rgba(75, 192, 192, 1)',
-                backgroundColor: risks.map(r => r>60 ? 'rgba(255,0,0,0.3)' : 'rgba(75,192,192,0.2)'),
-                pointRadius: risks.map(r => r>60 ? 8 : 4)
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100
-                }
-            },
-            plugins: {
-                annotation: {
-                    annotations: {
-                        dangerLine: {
-                            type: 'line',
-                            yMin: 60,
-                            yMax: 60,
-                            borderColor: 'red',
-                            borderWidth: 2,
-                            label: { content: '위험 기준', enabled: true, position: 'end' }
-                        }
-                    }
-                }
-            }
+const riskChart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: chartLabels,
+    datasets: [{
+      label: 'Risk Score',
+      data: chartData,
+      borderColor: 'rgba(75, 192, 192, 1)',
+      tension: 0.2,
+      fill: true,
+      backgroundColor: chartData.map(v => {
+        if (v > 60) return 'rgba(255,0,0,0.2)';       // DANGER
+        if (v > 30) return 'rgba(255,165,0,0.2)';     // WARNING
+        return 'rgba(0,255,0,0.1)';                   // SAFE
+      })
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      title: {
+        display: true,
+        text: '최근 15일 녹조 위험 점수'
+      }
+    },
+    scales: {
+      y: {
+        suggestedMin: 0,
+        suggestedMax: 100,
+        title: {
+          display: true,
+          text: 'Risk Score'
         }
-    });
-}
+      }
+    }
+  }
+});
 
-function getStatus(risk) {
-    if (risk>60) return 'Danger';
-    if (risk>30) return 'Warning';
-    return 'Safe';
-}
+// -----------------
+// 3. 실시간처럼 동적 업데이트 (브라우저 켜져 있는 동안만)
+// -----------------
+setInterval(() => {
+  const newDate = new Date();
+  const risk = Math.floor(Math.random() * 100);
 
-// 브라우저 켜진 동안 실시간 갱신
-setInterval(calculateRisk, 5000);
+  // 차트 라벨/데이터 추가
+  chartLabels.push(newDate.toLocaleDateString());
+  chartData.push(risk);
+
+  // 최근 15일만 유지
+  if (chartLabels.length > chartDays) {
+    chartLabels.shift();
+    chartData.shift();
+  }
+
+  // 배경 색상 업데이트
+  riskChart.data.datasets[0].backgroundColor = chartData.map(v => {
+    if (v > 60) return 'rgba(255,0,0,0.2)';       // DANGER
+    if (v > 30) return 'rgba(255,165,0,0.2)';     // WARNING
+    return 'rgba(0,255,0,0.1)';                   // SAFE
+  });
+
+  riskChart.update();
+}, 5000); // 5초마다 새 데이터 반영
