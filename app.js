@@ -1,5 +1,6 @@
 let riskChart;
 const RISK_THRESHOLD = 60; // 녹조 위험 기준
+const DISPLAY_DAYS = 15;   // 최근 15일만 표시
 
 async function getLatestData() {
     const res = await fetch('data.csv');
@@ -27,10 +28,10 @@ async function calculateRisk() {
     const chartData = await getLatestData();
     const filtered = chartData.filter(d => d.location === location);
     
-    // 최근 30일만
-    const last30 = filtered.slice(-30);
+    // 최근 15일만
+    const last15 = filtered.slice(-DISPLAY_DAYS);
 
-    const latest = last30.slice(-1)[0];
+    const latest = last15.slice(-1)[0];
     if (!latest) { alert('해당 위치 데이터가 없습니다.'); return; }
 
     const risk = latest.risk;
@@ -39,7 +40,7 @@ async function calculateRisk() {
     document.getElementById('riskScore').textContent = risk.toFixed(2);
     document.getElementById('status').textContent = status;
 
-    updateChart(last30);
+    updateChart(last15);
 }
 
 function getStatus(risk) {
@@ -86,10 +87,10 @@ function updateChart(chartData) {
     });
 }
 
-// 브라우저 열려 있는 동안만 주기적으로 최신 차트 갱신 (예: 5초)
+// 브라우저 열려 있는 동안만 주기적으로 최신 차트 갱신 (5초)
 async function autoRefresh() {
     await calculateRisk();
-    setTimeout(autoRefresh, 5000); // 5초마다 갱신
+    setTimeout(autoRefresh, 5000);
 }
 
 // 초기 실행
