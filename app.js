@@ -1,66 +1,52 @@
+let riskChart;
 
-// 1. Firebase Configuration (replace with your actual config)
-const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
-};
+async function getLatestData() {
+    const res = await fetch('data.csv');
+    const text = await res.text();
+    const lines = text.trim().split('\n').slice(1); // 헤더 제외
 
-// 2. Initialize Firebase (Add the script to your HTML)
-// Make sure to include this script in your HTML before app.js
-// <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-app.js"></script>
-// <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-firestore.js"></script>
-// <script>
-//   firebase.initializeApp(firebaseConfig);
-//   const db = firebase.firestore();
-// </script>
+    const data = lines.map(line => {
+        const [date, location, water_temp, chlorophyll, oxygen, pH] = line.split(',');
+        return {
+            timestamp: new Date(date),
+            location,
+            water_temp: Number(water_temp),
+            chlorophyll: Number(chlorophyll),
+            oxygen: Number(oxygen),
+            pH: Number(pH),
+            risk: Number(water_temp)*0.4 + Number(chlorophyll)*0.4 - Number(oxygen)*0.2
+        };
+    });
 
-
-// --- app.js ---
-
-let riskChart; // To hold the chart instance
+    return data;
+}
 
 async function calculateRisk() {
     const location = document.getElementById('location').value;
     if (!location) {
-        alert('Please enter a location.');
+        alert('위치를 선택해주세요.');
         return;
     }
 
-    // Simulate fetching real-time data
-    const temp = Math.random() * 35; // Simulated temperature
-    const chlorophyll = Math.random() * 100; // Simulated chlorophyll
-    const oxygen = Math.random() * 15; // Simulated oxygen
+    const chartData = await getLatestData();
+    const latest = chartData.filter(d => d.location === location).slice(-1)[0];
 
-    // Calculate risk
-    const risk = (temp * 0.4) + (chlorophyll * 0.4) - (oxygen * 0.2);
+    if (!latest) {
+        alert('해당 위치 데이터가 없습니다.');
+        return;
+    }
+
+    const risk = latest.risk;
     const status = getStatus(risk);
 
-    // Display results
     document.getElementById('riskScore').textContent = risk.toFixed(2);
     document.getElementById('status').textContent = status;
 
-    // Show alert if risk is high
     if (risk > 60) {
-        alert('DANGER: High risk of algae bloom!');
+        alert('⚠️ DANGER: High risk of algae bloom!');
     }
 
-    // Store data in Firestore
-    try {
-        await db.collection('waterQuality').add({
-            location: location,
-            risk: risk,
-            timestamp: new Date()
-        });
-        console.log("Data stored successfully");
-        updateChart();
-    } catch (error) {
-        console.error("Error storing data: ", error);
-        alert("Could not save data to Firebase. Make sure your Firebase config is correct and Firestore is enabled.");
-    }
+    updateChart(chartData.filter(d => d.location === location));
 }
 
 function getStatus(risk) {
@@ -69,39 +55,33 @@ function getStatus(risk) {
     return 'Safe';
 }
 
-async function updateChart() {
-    const chartData = await getLatestData();
-    const labels = chartData.map(d => new Date(d.timestamp).toLocaleTimeString());
+function updateChart(chartData) {
+    const labels = chartData.map(d => d.timestamp.toLocaleDateString());
     const data = chartData.map(d => d.risk);
 
     if (riskChart) {
         riskChart.destroy();
     }
+
     const ctx = document.getElementById('riskChart').getContext('2d');
     riskChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: labels,
+            labels,
             datasets: [{
-                label: 'Risk Score History (Last 5)',
-                data: data,
+                label: 'Risk Score History',
+                data,
                 borderColor: 'rgba(75, 192, 192, 1)',
                 tension: 0.1
             }]
+        },
+        options: {
+            scales: {
+                y: { beginAtZero: true }
+            }
         }
     });
 }
 
-
-async function getLatestData() {
-    const snapshot = await db.collection('waterQuality').orderBy('timestamp', 'desc').limit(5).get();
-    const data = [];
-    snapshot.forEach(doc => {
-        data.push(doc.data());
-    });
-    return data.reverse(); // To show oldest to newest
-}
-
-// Initial chart load
-updateChart();
-
+// 초기 로드
+getLatestData().then(data => updateChart(data));
