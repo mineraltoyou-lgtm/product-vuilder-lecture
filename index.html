@@ -1,29 +1,23 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <title>녹조 위험 대시보드</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="UTF-8">
+  <title>녹조 위험 대시보드</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    #dashboard { display: flex; flex-direction: column; align-items: center; }
+    canvas { max-width: 600px; max-height: 300px; }
+    small { font-size: 0.8em; }
+  </style>
 </head>
 <body>
-    <h1>녹조 위험 대시보드</h1>
 
-    <label for="location">위치 선택:</label>
-    <select id="location">
-        <option value="낙동강">낙동강</option>
-        <option value="한강">한강</option>
-        <option value="금강">금강</option>
-    </select>
+<div id="dashboard">
+  <h2>녹조 위험 대시보드 <small>(가상의 data 사용, 추후 실시간 data 사용예정)</small></h2>
+  <canvas id="riskChart"></canvas>
+</div>
 
-    <button onclick="calculateRisk()">위험 계산</button>
-
-    <div>
-        <p>Risk Score: <span id="riskScore">-</span></p>
-        <p>Status: <span id="status">-</span></p>
-    </div>
-
-    <canvas id="riskChart" width="800" height="400"></canvas>
-
-    <script src="app.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
