@@ -1,215 +1,25 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Global Pulse 5-Way Dashboard</title>
+    <title>Water Quality Alert</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root {
-            --bg: #000000;
-            --column-bg: #0a0a0a;
-            --border: #1a1a1a;
-            --accent: #ff3e3e;
-            --text: #e0e0e0;
-            --text-dim: #777777;
-        }
-
-        body {
-            font-family: 'Pretendard', -apple-system, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0; padding: 0;
-            overflow-x: hidden;
-        }
-
-        header {
-            padding: 10px 20px;
-            background: #000;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky; top: 0; z-index: 1000;
-        }
-
-        .logo { font-size: 1rem; font-weight: 900; color: var(--accent); }
-
-        /* 5분할 대시보드 그리드 */
-        .dashboard {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 1px;
-            background: var(--border);
-            min-height: calc(100vh - 50px);
-        }
-
-        .news-column {
-            background: var(--column-bg);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .column-header {
-            padding: 12px 15px;
-            background: #111;
-            border-bottom: 1px solid var(--border);
-            font-size: 0.8rem;
-            font-weight: bold;
-            color: var(--accent);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .news-list {
-            flex-grow: 1;
-            overflow-y: auto;
-        }
-
-        .news-item {
-            padding: 12px 15px;
-            border-bottom: 1px solid var(--border);
-            display: block;
-            text-decoration: none;
-            transition: 0.2s;
-        }
-
-        .news-item:hover { background: #1a1a1a; }
-
-        .news-title {
-            font-size: 0.85rem; /* 글씨 작게 조정 */
-            line-height: 1.35;
-            color: var(--text);
-            margin-bottom: 5px;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .news-meta {
-            font-size: 0.7rem; /* 메타 정보 아주 작게 */
-            color: var(--text-dim);
-            display: flex;
-            justify-content: space-between;
-        }
-
-        /* 스크롤바 커스텀 */
-        .news-list::-webkit-scrollbar { width: 4px; }
-        .news-list::-webkit-scrollbar-track { background: transparent; }
-        .news-list::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
-
-        @media (max-width: 1200px) {
-            .dashboard { grid-template-columns: repeat(3, 1fr); }
-        }
-        @media (max-width: 768px) {
-            .dashboard { grid-template-columns: 1fr; }
-            .news-column { height: 400px; }
-        }
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; }
+        #chartContainer { width: 80%; max-width: 600px; margin-top: 20px; }
     </style>
 </head>
 <body>
-
-<header>
-    <div class="logo">GLOBAL PULSE 5-WAY MONITOR</div>
-    <div style="font-size: 0.7rem; color: #444;">LIVE DATA FROM GOOGLE NEWS</div>
-</header>
-
-<div class="dashboard">
-    <!-- 1: 주요 뉴스 -->
-    <div class="news-column" id="col-headlines">
-        <div class="column-header"><span>🔥 HEADLINES</span><span class="status">LIVE</span></div>
-        <div class="news-list" id="list-headlines"></div>
+    <h1>Water Quality / Algae Risk Alert</h1>
+    <input type="text" id="location" placeholder="Enter location">
+    <button onclick="calculateRisk()">Calculate Risk</button>
+    <h2>Risk Score: <span id="riskScore"></span></h2>
+    <h2>Status: <span id="status"></span></h2>
+    <div id="chartContainer">
+        <canvas id="riskChart"></canvas>
     </div>
 
-    <!-- 2: 세계 -->
-    <div class="news-column" id="col-world">
-        <div class="column-header"><span>🌍 WORLD</span><span class="status">24H</span></div>
-        <div class="news-list" id="list-world"></div>
-    </div>
-
-    <!-- 3: 경제 -->
-    <div class="news-column" id="col-business">
-        <div class="column-header"><span>📈 BUSINESS</span><span class="status">MARKET</span></div>
-        <div class="news-list" id="list-business"></div>
-    </div>
-
-    <!-- 4: 기술 -->
-    <div class="news-column" id="col-tech">
-        <div class="column-header"><span>💻 TECH</span><span class="status">AI</span></div>
-        <div class="news-list" id="list-tech"></div>
-    </div>
-
-    <!-- 5: 기후 -->
-    <div class="news-column" id="col-climate">
-        <div class="column-header"><span>🌡️ CLIMATE</span><span class="status">ALERT</span></div>
-        <div class="news-list" id="list-climate"></div>
-    </div>
-</div>
-
-<script>
-    const PROXY_URL = "https://api.rss2json.com/v1/api.json?rss_url=";
-    const categories = [
-        { id: 'headlines', query: '주요 뉴스' },
-        { id: 'world', query: '세계 뉴스' },
-        { id: 'business', query: '경제 금융' },
-        { id: 'tech', query: 'IT 기술 반도체 AI' },
-        { id: 'climate', query: '기후 이상기후 환경' }
-    ];
-
-    async function fetchAllNews() {
-        categories.forEach(cat => {
-            fetchColumnNews(cat);
-        });
-    }
-
-    async function fetchColumnNews(cat) {
-        const listContainer = document.getElementById(`list-${cat.id}`);
-        listContainer.innerHTML = '<div style="padding:20px; font-size:0.7rem; color:#444;">Loading...</div>';
-
-        const googleNewsUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(cat.query)}&hl=ko&gl=KR&ceid=KR:ko`;
-        
-        try {
-            const response = await fetch(PROXY_URL + encodeURIComponent(googleNewsUrl));
-            const data = await response.json();
-
-            if (data.status === 'ok') {
-                renderColumn(listContainer, data.items.slice(0, 15)); // 컬럼당 15개씩 노출
-            } else {
-                listContainer.innerHTML = '<div style="padding:20px; font-size:0.7rem; color:#444;">Error</div>';
-            }
-        } catch (error) {
-            console.error(error);
-        }
-    }
-
-    function renderColumn(container, items) {
-        container.innerHTML = '';
-        items.forEach(item => {
-            const pubDate = new Date(item.pubDate);
-            const timeStr = `${pubDate.getHours()}:${String(pubDate.getMinutes()).padStart(2, '0')}`;
-            
-            const itemElement = document.createElement('a');
-            itemElement.href = item.link;
-            itemElement.target = "_blank";
-            itemElement.className = "news-item";
-            itemElement.innerHTML = `
-                <div class="news-title">${item.title}</div>
-                <div class="news-meta">
-                    <span>${item.author || 'News'}</span>
-                    <span>${timeStr}</span>
-                </div>
-            `;
-            container.appendChild(itemElement);
-        });
-    }
-
-    // 5분마다 전체 갱신
-    setInterval(fetchAllNews, 300000);
-
-    // 초기 로드
-    window.onload = fetchAllNews;
-</script>
-
+    <script src="app.js"></script>
 </body>
 </html>
