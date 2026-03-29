@@ -3,6 +3,9 @@ name: Update CSV Daily
 on:
   schedule:
     - cron: "0 0 * * *"  # 매일 00:00 UTC (한국은 오전 9시)
+permissions:
+  contents: write
+
 
 jobs:
   update:
