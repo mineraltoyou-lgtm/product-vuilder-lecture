@@ -11,7 +11,6 @@ def generate_row(date, loc):
     chlorophyll = random.randint(15, 60)
     oxygen = round(random.uniform(4.0, 7.5), 1)
     ph = round(random.uniform(7.2, 8.0), 1)
-
     return [
         date.strftime("%Y-%m-%d"),
         loc,
@@ -21,59 +20,37 @@ def generate_row(date, loc):
         ph
     ]
 
-# 🔥 1년 데이터 생성
-def create_initial_data():
-    if os.path.exists(filename):
-        print("이미 data.csv 존재 → 초기 생성 스킵")
-        return
-
-    start_date = datetime.today() - timedelta(days=365)
-
-    with open(filename, "w", newline="", encoding="utf-8") as file:
-        writer = csv.writer(file)
-        writer.writerow(["date", "location", "water_temp", "chlorophyll", "oxygen", "pH"])
-
-        for i in range(365):
-            current_date = start_date + timedelta(days=i)
-
-            for loc in locations:
-                writer.writerow(generate_row(current_date, loc))
-
-    print("1년치 데이터 생성 완료 ✅")
-
-# 🔥 마지막 줄 개행 보정 함수 (핵심 추가)
-def ensure_newline():
-    if not os.path.exists(filename):
-        return
-
-    with open(filename, "rb+") as file:
-        file.seek(-1, os.SEEK_END)
-        last_char = file.read(1)
-
-        if last_char != b"\n":
-            file.write(b"\n")
-
-# 🔥 오늘 데이터 추가
-def append_today_data():
-    today = datetime.today().strftime("%Y-%m-%d")
-
-    if os.path.exists(filename):
-        with open(filename, "r", encoding="utf-8") as file:
-            if today in file.read():
-                print("오늘 데이터 이미 존재 → 추가 안함")
-                return
-
-    # 👉 추가 전에 줄바꿈 보정
-    ensure_newline()
+# 2026-01-01 ~ 오늘 데이터 생성
+def create_data_since_2026():
+    start_date = datetime(2026, 1, 1)
+    end_date = datetime.today()
+    write_header = not os.path.exists(filename)
 
     with open(filename, "a", newline="", encoding="utf-8") as file:
         writer = csv.writer(file)
+        if write_header:
+            writer.writerow(["date","location","water_temp","chlorophyll","oxygen","pH"])
+        current_date = start_date
+        while current_date <= end_date:
+            for loc in locations:
+                writer.writerow(generate_row(current_date, loc))
+            current_date += timedelta(days=1)
+    print(f"{start_date.strftime('%Y-%m-%d')} ~ {end_date.strftime('%Y-%m-%d')} 데이터 생성 완료 ✅")
 
+# 오늘 데이터만 추가 (매일 실행용)
+def append_today_data():
+    today = datetime.today().strftime("%Y-%m-%d")
+    if os.path.exists(filename):
+        with open(filename,"r",encoding="utf-8") as file:
+            if today in file.read():
+                print("오늘 데이터 이미 존재 → 추가 안함")
+                return
+    with open(filename, "a", newline="", encoding="utf-8") as file:
+        writer = csv.writer(file)
         for loc in locations:
             writer.writerow(generate_row(datetime.today(), loc))
-
     print("오늘 데이터 추가 완료 ✅")
 
 # 실행
-create_initial_data()
+create_data_since_2026()
 append_today_data()
