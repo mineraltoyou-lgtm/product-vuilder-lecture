@@ -2,8 +2,7 @@ name: Update CSV Daily
 
 on:
   schedule:
-    - cron: "0 0 * * *"  # 매일 00:00 UTC
-  workflow_dispatch:     # 👈 이거 추가 (핵심)
+    - cron: "0 0 * * *"
 
 permissions:
   contents: write
@@ -11,18 +10,14 @@ permissions:
 jobs:
   update:
     runs-on: ubuntu-latest
-
     steps:
-      - name: 코드 가져오기
-        uses: actions/checkout@v3
-
+      - uses: actions/checkout@v3
       - name: Python 실행
         run: python generate.py
-
-      - name: 변경사항 커밋
+      - name: 커밋 & push
         run: |
           git config --global user.name "bot"
           git config --global user.email "bot@example.com"
           git add data.csv
-          git commit -m "자동 데이터 업데이트" || echo "변경 없음"
+          git commit -m "자동 데이터 업데이트"
           git push
