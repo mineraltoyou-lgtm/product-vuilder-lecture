@@ -1,105 +1,78 @@
 let riskChart;
-const RISK_THRESHOLD = 60;
-const DISPLAY_DAYS = 15;
-const HIGHLIGHT_COLOR = 'rgba(255, 0, 0, 0.3)'; // 위험 배경
-const NORMAL_COLOR = 'rgba(75, 192, 192, 1)';    // 안전 선
-
-async function getLatestData() {
-    const res = await fetch('data.csv');
-    const text = await res.text();
-    const lines = text.trim().split('\n').slice(1); 
-    const data = lines.map(line => {
-        const [date, location, water_temp, chlorophyll, oxygen, pH] = line.split(',');
-        return {
-            timestamp: new Date(date),
-            location,
-            water_temp: Number(water_temp),
-            chlorophyll: Number(chlorophyll),
-            oxygen: Number(oxygen),
-            pH: Number(pH),
-            risk: Number(water_temp)*0.4 + Number(chlorophyll)*0.4 - Number(oxygen)*0.2
-        };
-    });
-    return data;
-}
 
 async function calculateRisk() {
     const location = document.getElementById('location').value;
-    if (!location) { alert('위치를 선택해주세요.'); return; }
+    if (!location) return alert('위치를 선택하세요.');
 
-    const chartData = await getLatestData();
-    const filtered = chartData.filter(d => d.location === location);
-    const last15 = filtered.slice(-DISPLAY_DAYS);
+    const response = await fetch('data.csv');
+    const csvText = await response.text();
+    const rows = csvText.split('\n').slice(1).map(r => r.split(','));
+    
+    // 최근 15일 데이터 필터
+    const today = new Date();
+    const past15 = new Date(today.getTime() - 14*24*60*60*1000);
+    const dataFiltered = rows.filter(r => {
+        const date = new Date(r[0]);
+        return date >= past15 && r[1] === location;
+    });
 
-    const latest = last15.slice(-1)[0];
-    if (!latest) { alert('해당 위치 데이터가 없습니다.'); return; }
+    const labels = dataFiltered.map(r => r[0]);
+    const risks = dataFiltered.map(r => {
+        const temp = parseFloat(r[2]);
+        const chl = parseFloat(r[3]);
+        const oxy = parseFloat(r[4]);
+        return temp*0.4 + chl*0.4 - oxy*0.2;
+    });
 
-    const risk = latest.risk;
-    const status = getStatus(risk);
+    const latestRisk = risks[risks.length-1];
+    document.getElementById('riskScore').textContent = latestRisk.toFixed(2);
+    document.getElementById('status').textContent = getStatus(latestRisk);
 
-    document.getElementById('riskScore').textContent = risk.toFixed(2);
-    document.getElementById('status').textContent = status;
-
-    updateChart(last15);
-}
-
-function getStatus(risk) {
-    if (risk > 60) return 'Danger';
-    if (risk > 30) return 'Warning';
-    return 'Safe';
-}
-
-function updateChart(chartData) {
-    const labels = chartData.map(d => d.timestamp.toLocaleDateString());
-    const data = chartData.map(d => d.risk);
-
-    const thresholdLine = Array(chartData.length).fill(RISK_THRESHOLD);
-
-    // 배경 색상 설정 (위험 구간)
-    const bgColors = chartData.map(d => d.risk >= RISK_THRESHOLD ? HIGHLIGHT_COLOR : 'rgba(0,0,0,0)');
-
+    // 차트 생성
     if (riskChart) riskChart.destroy();
-
     const ctx = document.getElementById('riskChart').getContext('2d');
     riskChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels,
-            datasets: [
-                {
-                    label: 'Risk Score',
-                    data,
-                    borderColor: NORMAL_COLOR,
-                    backgroundColor: bgColors,
-                    tension: 0.1,
-                    fill: true,
-                    pointRadius: chartData.map(d => d.risk >= RISK_THRESHOLD ? 6 : 3), // 위험 점 강조
-                    pointBackgroundColor: chartData.map(d => d.risk >= RISK_THRESHOLD ? 'red' : NORMAL_COLOR)
-                },
-                {
-                    label: 'Risk Threshold',
-                    data: thresholdLine,
-                    borderColor: 'red',
-                    borderDash: [5,5],
-                    pointRadius: 0,
-                    fill: false
-                }
-            ]
+            labels: labels,
+            datasets: [{
+                label: 'Risk Score (최근 15일)',
+                data: risks,
+                borderColor: 'rgba(75, 192, 192, 1)',
+                backgroundColor: risks.map(r => r>60 ? 'rgba(255,0,0,0.3)' : 'rgba(75,192,192,0.2)'),
+                pointRadius: risks.map(r => r>60 ? 8 : 4)
+            }]
         },
         options: {
-            scales: { y: { beginAtZero: true } },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            },
             plugins: {
-                legend: { display: true }
+                annotation: {
+                    annotations: {
+                        dangerLine: {
+                            type: 'line',
+                            yMin: 60,
+                            yMax: 60,
+                            borderColor: 'red',
+                            borderWidth: 2,
+                            label: { content: '위험 기준', enabled: true, position: 'end' }
+                        }
+                    }
+                }
             }
         }
     });
 }
 
-// 브라우저 켜 있는 동안 5초마다 갱신
-async function autoRefresh() {
-    await calculateRisk();
-    setTimeout(autoRefresh, 5000);
+function getStatus(risk) {
+    if (risk>60) return 'Danger';
+    if (risk>30) return 'Warning';
+    return 'Safe';
 }
 
-// 초기 실행
-autoRefresh();
+// 브라우저 켜진 동안 실시간 갱신
+setInterval(calculateRisk, 5000);
