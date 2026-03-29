@@ -1,24 +1,31 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Water Quality Alert</title>
+    <title>하천 녹조 위험 모니터링</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; }
-        #chartContainer { width: 80%; max-width: 600px; margin-top: 20px; }
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        input, button { padding: 5px 10px; margin: 5px; }
+        #riskScore { font-weight: bold; }
+        #status { font-weight: bold; }
     </style>
 </head>
 <body>
-    <h1>Water Quality / Algae Risk Alert</h1>
-    <input type="text" id="location" placeholder="Enter location">
-    <button onclick="calculateRisk()">Calculate Risk</button>
-    <h2>Risk Score: <span id="riskScore"></span></h2>
-    <h2>Status: <span id="status"></span></h2>
-    <div id="chartContainer">
-        <canvas id="riskChart"></canvas>
-    </div>
+    <h1>하천 녹조 위험 모니터링</h1>
+    
+    <label for="location">위치 선택:</label>
+    <select id="location">
+        <option value="낙동강">낙동강</option>
+        <option value="한강">한강</option>
+        <option value="금강">금강</option>
+    </select>
+    <button onclick="calculateRisk()">위험 점수 계산</button>
+
+    <p>Risk Score: <span id="riskScore">-</span></p>
+    <p>Status: <span id="status">-</span></p>
+
+    <canvas id="riskChart" width="600" height="300"></canvas>
 
     <script src="app.js"></script>
 </body>
