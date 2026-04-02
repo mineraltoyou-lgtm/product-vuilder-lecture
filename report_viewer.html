@@ -1,11 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <title>정책 보고서 뷰어</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Markdown 렌더링을 위한 Marked.js 라이브러리 추가 -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         body { background-color: #111; color: #eee; }
@@ -13,7 +11,6 @@
         .main-content { background-color: #0a0a0a; }
         .report-button { transition: background-color 0.2s; }
         .report-button:hover, .report-button.active { background-color: #2a6fdb; }
-        /* 스크롤바 스타일링 */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #1a1a1a; }
         ::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
@@ -22,13 +19,11 @@
 </head>
 <body class="flex h-screen">
 
-    <!-- 왼쪽 사이드바: 보고서 날짜 목록 -->
     <div id="sidebar" class="sidebar w-1/4 h-full overflow-y-auto p-4 border-r border-gray-700">
         <h2 class="text-xl font-bold mb-4">보고서 목록</h2>
         <div id="report-list"></div>
     </div>
 
-    <!-- 오른쪽 메인 콘텐츠: 보고서 내용 -->
     <div id="main-content" class="main-content w-3/4 h-full overflow-y-auto p-8">
         <div id="report-body" class="prose prose-invert max-w-none"></div>
     </div>
@@ -38,55 +33,68 @@
             const reportListEl = document.getElementById('report-list');
             const reportBodyEl = document.getElementById('report-body');
 
+            // Extracts YYYY-MM-DD and creates a Date object.
+            const extractDate = (path) => {
+                const match = path.match(/(\d{4}-\d{2}-\d{2})/);
+                return match ? new Date(match[0]) : null;
+            };
+
+            const loadReport = async (path) => {
+                try {
+                    const reportResponse = await fetch(path);
+                    if (!reportResponse.ok) throw new Error(`Report fetch failed with status: ${reportResponse.status}`);
+                    const reportMarkdown = await reportResponse.text();
+                    reportBodyEl.innerHTML = marked.parse(reportMarkdown);
+                } catch (error) {
+                    console.error('Error loading report:', path, error);
+                    reportBodyEl.innerHTML = `<p class="text-red-500">보고서 로딩 중 오류 발생: ${error.message}</p>`;
+                }
+            };
+
             try {
-                // 1. 보고서 목록 (reports-list.json) 가져오기
                 const response = await fetch('./reports-list.json');
-                if (!response.ok) throw new Error('보고서 목록을 불러오는 데 실패했습니다.');
+                if (!response.ok) throw new Error('Failed to fetch reports list.');
                 
                 const reportFiles = await response.json();
-
-                // 2. 최신순으로 정렬 (이미 정렬되어 있지만, 안전을 위해 재정렬)
-                reportFiles.sort().reverse();
 
                 if (reportFiles.length === 0) {
                     reportListEl.innerHTML = '<p>생성된 보고서가 없습니다.</p>';
                     return;
                 }
 
-                // 3. 왼쪽 사이드바에 날짜 버튼 동적 생성
+                // Sort files by date in descending order (newest first).
+                reportFiles.sort((a, b) => {
+                    const dateA = extractDate(a);
+                    const dateB = extractDate(b);
+                    if (dateA && dateB) return dateB - dateA;
+                    // Fallback for items without a date.
+                    return b.localeCompare(a);
+                });
+
+                // Create sidebar buttons for each report.
                 reportFiles.forEach(path => {
                     const button = document.createElement('button');
-                    const dateMatch = path.match(/(\d{4}-\d{2}-\d{2})/);
-                    button.textContent = dateMatch ? dateMatch[0] : path;
+                    const filename = path.split('/').pop().replace('.md', ''); // More descriptive name
+                    button.textContent = filename;
                     button.className = 'report-button block w-full text-left p-2 my-1 rounded';
                     button.dataset.path = path;
+                    
                     button.addEventListener('click', () => {
                         loadReport(path);
-                        // 모든 버튼에서 active 클래스 제거 후, 클릭된 버튼에만 추가
+                        // Update active state for buttons
                         document.querySelectorAll('.report-button').forEach(btn => btn.classList.remove('active'));
                         button.classList.add('active');
                     });
                     reportListEl.appendChild(button);
                 });
 
-                // 4. 보고서 내용을 불러와서 렌더링하는 함수
-                const loadReport = async (path) => {
-                    try {
-                        const reportResponse = await fetch(path);
-                        if (!reportResponse.ok) throw new Error('보고서를 불러오는 데 실패했습니다.');
-                        const reportMarkdown = await reportResponse.text();
-                        // Marked.js를 사용하여 Markdown을 HTML로 변환하여 표시
-                        reportBodyEl.innerHTML = marked.parse(reportMarkdown);
-                    } catch (error) {
-                        console.error('Error loading report:', error);
-                        reportBodyEl.innerHTML = `<p class="text-red-500">보고서 로딩 중 오류 발생: ${error.message}</p>`;
-                    }
-                };
-
-                // 5. 페이지 최초 로드 시, 가장 최신 보고서를 자동으로 불러오기
+                // Automatically load the newest report on page load.
                 if (reportFiles.length > 0) {
-                    loadReport(reportFiles[0]);
-                    reportListEl.querySelector('.report-button').classList.add('active');
+                    await loadReport(reportFiles[0]);
+                    const firstButton = reportListEl.querySelector('.report-button');
+                    if (firstButton) {
+                        firstButton.classList.add('active');
+                    }
                 }
 
             } catch (error) {
