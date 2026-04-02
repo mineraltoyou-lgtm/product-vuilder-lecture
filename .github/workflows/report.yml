@@ -1,0 +1,27 @@
+
+name: Generate Daily Report
+
+on:
+  schedule:
+    - cron: '0 9 * * *' # Runs every day at 9:00 AM UTC
+  workflow_dispatch: # Allows manual triggering
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Run report generator
+        run: |
+          chmod +x ./generate_report.sh
+          ./generate_report.sh
+
+      - name: Commit and push if changed
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add reports/
+          git diff --staged --quiet || (git commit -m "docs: Generate daily report for $(date +%Y-%m-%d)" && git push)
