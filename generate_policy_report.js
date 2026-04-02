@@ -1,4 +1,3 @@
-
 const { execSync } = require('child_process');
 const fs = require('fs');
 const { step } = require('./step.js'); // step.js의 함수를 재활용
@@ -50,8 +49,8 @@ async function generateReport() {
     fs.writeFileSync(reportFilename, cleanReport);
     console.log(`✅ 고품질 보고서 생성 완료: ${reportFilename}`);
 
-    // 5. 보고서 목록(reports-list.json) 업데이트
-    const allReports = execSync('find ./reports -name "report-*.md" -o -name "policy-report-*.md"').toString().trim().split('\n');
+    // 5. 보고서 목록(reports-list.json) 업데이트 - 모든 .md 파일을 포함하도록 수정
+    const allReports = execSync('find ./reports -name "*.md"').toString().trim().split('\n');
     const jsonReportList = JSON.stringify(allReports.filter(Boolean));
     fs.writeFileSync('reports-list.json', jsonReportList);
     console.log("✅ 보고서 목록 업데이트 완료: reports-list.json");
