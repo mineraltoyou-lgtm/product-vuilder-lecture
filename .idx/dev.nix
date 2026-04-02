@@ -10,7 +10,10 @@
     pkgs.nodePackages."@google/gemini-cli"
   ];
   # Sets environment variables in the workspace
-  env = {};
+  env = {
+    CLAUDE_CODE_API_KEY = "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";
+    CLAUDE_CODE_BASE_URL = "https://openrouter.ai/api/v1";
+  };
   idx = {
     # Search for the extensions you want on https://open-vsx.org/ and use "publisher.id"
     extensions = [

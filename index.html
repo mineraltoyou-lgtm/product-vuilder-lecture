@@ -1,25 +1,33 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Water Quality Alert</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>200 OSS Matrix Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; }
-        #chartContainer { width: 80%; max-width: 600px; margin-top: 20px; }
+        body { background: #0a0a0a; color: #eee; font-family: sans-serif; }
+        .grid-card { background: #111; border: 1px solid #222; transition: 0.2s; }
+        .grid-card:hover { border-color: #444; background: #161616; }
     </style>
 </head>
-<body>
-    <h1>Water Quality / Algae Risk Alert</h1>
-    <input type="text" id="location" placeholder="Enter location">
-    <button onclick="calculateRisk()">Calculate Risk</button>
-    <h2>Risk Score: <span id="riskScore"></span></h2>
-    <h2>Status: <span id="status"></span></h2>
-    <div id="chartContainer">
-        <canvas id="riskChart"></canvas>
-    </div>
-
-    <script src="app.js"></script>
+<body class="p-10">
+    <h1 class="text-3xl font-bold mb-8 border-b border-zinc-800 pb-4">System 200: Global Matrix</h1>
+    <div id="matrix" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        </div>
+    <script>
+        fetch('./data.json')
+            .then(res => res.json())
+            .then(data => {
+                const html = data.map(p => `
+                    <div class="grid-card p-5 rounded-lg">
+                        <div class="text-xs text-zinc-600 mb-1">${p.id}</div>
+                        <h2 class="text-lg font-bold">${p.name}</h2>
+                        <p class="text-sm text-zinc-400 mt-2">${p.category}</p>
+                        <a href="./platforms/${p.id}/index.html" class="inline-block mt-4 text-blue-500 text-sm hover:underline">Launch →</a>
+                    </div>
+                `).join('');
+                document.getElementById('matrix').innerHTML = html;
+            });
+    </script>
 </body>
 </html>
