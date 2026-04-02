@@ -59,3 +59,7 @@ REPORT_CONTENT="### **프로젝트 작업 요약 보고서 (어제까지의 진�
 echo "$REPORT_CONTENT" > "$FILENAME"
 
 echo "✅ Report generated: $FILENAME"
+
+# After creating a report, list all report files and save to a JSON file.
+find ./reports -name "report-*.md" -print0 | xargs -0 jq -R . | jq -s . > reports-list.json
+echo "✅ Report list updated: reports-list.json"
