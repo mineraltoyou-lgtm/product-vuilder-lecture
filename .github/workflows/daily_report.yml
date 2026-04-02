@@ -1,0 +1,39 @@
+
+name: 매일 정책 보고서 생성
+
+on:
+  schedule:
+    # 매일 UTC 0시 (한국 시간 오전 9시)에 실행
+    - cron: '0 0 * * *'
+  workflow_dispatch: # 수동 실행을 위한 트리거
+
+jobs:
+  build-and-commit-report:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. 코드 체크아웃
+        uses: actions/checkout@v3
+
+      - name: 2. Node.js 환경 설정
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: 3. NPM 의존성 설치
+        run: npm install axios dotenv
+
+      - name: 4. 보고서 생성 스크립트 실행
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          AI_MODEL: 'anthropic/claude-3-haiku' # 보고서 작성에는 Haiku 모델 활용
+        run: node generate_policy_report.js
+
+      - name: 5. 변경사항 커밋 및 푸시
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add ./reports/policy-report-*.md reports-list.json
+          # 새로운 보고서가 생성되었을 경우에만 커밋
+          git diff --staged --quiet || git commit -m "chore(bot): 정책 제안서 보고서 자동 생성"
+          git push
