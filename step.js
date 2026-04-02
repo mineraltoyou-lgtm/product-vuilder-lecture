@@ -37,16 +37,24 @@ async function main() {
 
     // 2. JSON 추출 및 파일 저장 (gstack: Data Persistence)
     try {
-      const jsonStart = content.indexOf('[');
-      const jsonEnd = content.lastIndexOf(']') + 1;
-      const cleanJson = content.slice(jsonStart, jsonEnd);
-      
-      if (cleanJson) {
-        fs.writeFileSync('data.json', cleanJson, 'utf8');
-        console.log("✅ [Success] data.json 파일이 성공적으로 생성되었습니다.");
-      }
-    } catch (parseErr) {
-      console.log("⚠️ [Warning] 답변에서 JSON 형식을 추출하지 못했습니다. 응답을 확인하세요.");
+        // 정규식을 사용하여 JSON 배열 형식의 문자열을 추출합니다.
+        const jsonMatch = content.match(/(\[.*\])/s);
+        if (jsonMatch && jsonMatch[0]) {
+            const jsonString = jsonMatch[0];
+            // 추출된 문자열이 유효한 JSON인지 확인합니다.
+            try {
+                JSON.parse(jsonString);
+                fs.writeFileSync('data.json', jsonString, 'utf8');
+                console.log("✅ [Success] data.json 파일이 성공적으로 생성되었습니다.");
+            } catch (jsonParseError) {
+                console.log("⚠️ [Warning] 추출된 내용이 유효한 JSON 형식이 아닙니다. 응답을 확인하세요.");
+                console.log("Extracted content:", jsonString);
+            }
+        } else {
+            console.log("⚠️ [Warning] 답변에서 JSON 배열을 찾지 못했습니다.");
+        }
+    } catch (fileWriteErr) {
+        console.log("❌ [Error] data.json 파일 작성 중 오류가 발생했습니다.", fileWriteErr);
     }
 
   } catch (err) {
